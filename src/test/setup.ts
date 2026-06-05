@@ -12,3 +12,4 @@ Object.assign(navigator, {
 
 window.URL.createObjectURL = vi.fn(() => 'blob:carefinder');
 window.URL.revokeObjectURL = vi.fn();
+HTMLAnchorElement.prototype.click = vi.fn();

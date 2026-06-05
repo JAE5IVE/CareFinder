@@ -1,14 +1,14 @@
 import { expect, test } from '@playwright/test';
 
 test('searches hospitals by LGA/city text', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByPlaceholder('e.g. Reddington, Ikoyi, or Surulere').fill('Eti-Osa');
   await expect(page.getByText('Reddington Multi-Specialty Hospital')).toBeVisible();
   await expect(page.getByText('Lagoon Hospital Ikoyi')).toBeVisible();
 });
 
 test('exports filtered hospital results to CSV', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByPlaceholder('e.g. Reddington, Ikoyi, or Surulere').fill('Lagos');
   await page.getByText('CSV Export').click();
   const downloadPromise = page.waitForEvent('download');
@@ -18,7 +18,7 @@ test('exports filtered hospital results to CSV', async ({ page }) => {
 });
 
 test('generates a shareable link for current filters', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByPlaceholder('e.g. Reddington, Ikoyi, or Surulere').fill('Lagos');
   await page.getByText('Share List').click();
   const input = page.locator('input[readonly]');
@@ -28,7 +28,7 @@ test('generates a shareable link for current filters', async ({ page }) => {
 });
 
 test('admin can sign in and open the registry console', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByText('Staff Sign In').click();
   await page.getByText('Admin Staff').click();
   await page.getByText('Log In Portal').click();
@@ -38,7 +38,7 @@ test('admin can sign in and open the registry console', async ({ page }) => {
 });
 
 test('anonymous users must sign in before reviewing hospitals', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
   await page.getByText('Lagos University Teaching Hospital').click();
   await expect(page.getByText(/Please sign in to submit text reviews/)).toBeVisible();
 });

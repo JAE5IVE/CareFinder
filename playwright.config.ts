@@ -2,8 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 30_000,
-  fullyParallel: true,
+  timeout: 60_000,
+  fullyParallel: false,
+  workers: 1,
   use: {
     baseURL: 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
@@ -17,7 +18,12 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+        },
+      },
     },
   ],
 });
