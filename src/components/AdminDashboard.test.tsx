@@ -7,6 +7,8 @@ describe('AdminDashboard', () => {
   const props = {
     hospitals: SEEDED_HOSPITALS,
     reviews: SEEDED_REVIEWS,
+    backendStatus: 'Connected to live Carefinder records.',
+    onRestartSeeds: vi.fn(),
     onAddHospital: vi.fn(),
     onUpdateHospital: vi.fn(),
     onDeleteHospital: vi.fn(),

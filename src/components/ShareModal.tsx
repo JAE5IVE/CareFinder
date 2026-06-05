@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Hospital, SearchFilters } from '../types';
-import { X, Link2, Mail, Copy, Check, Send, Sparkles, Terminal } from 'lucide-react';
+import { X, Link2, Mail, Copy, Check, Send, Sparkles } from 'lucide-react';
 import { hasSupabaseConfig } from '../lib/env';
 import { sendHospitalShare } from '../lib/carefinderRepository';
 
@@ -14,6 +14,7 @@ interface ShareModalProps {
   onClose: () => void;
   filters: SearchFilters;
   hospitals: Hospital[]; // list of current filtered hospitals to pick from
+  initialHospitalId?: string | null;
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
@@ -21,6 +22,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   onClose,
   filters,
   hospitals,
+  initialHospitalId,
 }) => {
   const [recipientEmail, setRecipientEmail] = useState('');
   const [selectedHospIds, setSelectedHospIds] = useState<string[]>(
@@ -29,7 +31,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   const [copied, setCopied] = useState(false);
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'success'>('idle');
-  const [apiLogs, setApiLogs] = useState<string[]>([]);
+  const [emailError, setEmailError] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setSelectedHospIds(initialHospitalId ? [initialHospitalId] : hospitals.slice(0, 3).map(h => h.id));
+    setEmailError('');
+    setEmailStatus('idle');
+  }, [hospitals, initialHospitalId, isOpen]);
 
   // Generate URL based on filter inputs
   const shareableUrl = useMemo(() => {
@@ -81,46 +90,23 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     if (!recipientEmail || selectedHospIds.length === 0) return;
 
     setEmailStatus('sending');
+    setEmailError('');
     const selectedHospitals = hospitals.filter(h => selectedHospIds.includes(h.id));
 
     if (hasSupabaseConfig) {
-      setApiLogs(['EDGE_FUNCTION: Calling share-hospitals via Supabase Functions...']);
       try {
         await sendHospitalShare(recipientEmail, selectedHospitals, shareableUrl);
-        setApiLogs(prev => [...prev, `SUCCESS: Resend accepted ${selectedHospitals.length} hospital entries for ${recipientEmail}.`]);
         setEmailStatus('success');
       } catch (error) {
-        setApiLogs(prev => [...prev, `ERROR: ${error instanceof Error ? error.message : 'Unable to send email.'}`]);
+        setEmailError(error instanceof Error ? error.message : 'Unable to send email.');
         setEmailStatus('idle');
       }
       return;
     }
 
-    setApiLogs([
-      'INIT: Resolving Resend API client...',
-      'POST: https://api.resend.com/emails',
-      'HEADERS: { Content-Type: "application/json", Authorization: "Bearer re_******" }'
-    ]);
-
-    // Simulate real steps
     setTimeout(() => {
-      setApiLogs(prev => [
-        ...prev,
-        `PAYLOAD: Sending curated hospital index with ${selectedHospIds.length} facility entries to [${recipientEmail}]`,
-        'HTML_GEN: Rendering email HTML template block with Tailwind styles...',
-      ]);
-    }, 600);
-
-    setTimeout(() => {
-      const selectedNames = selectedHospitals.map(h => h.name);
-      setApiLogs(prev => [
-        ...prev,
-        `MAIL_HTML: "You have a curated medical directory list containing: ${selectedNames.join(', ')}"`,
-        'SUCCESS: Resend delivery ID [msg_82y938ha9d1h8s79] created successfully.',
-        'HTTP_STATUS: 200 OK (Processed in 420ms)'
-      ]);
       setEmailStatus('success');
-    }, 1500);
+    }, 900);
   };
 
   return (
@@ -134,7 +120,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Share Medical Directory</h3>
-              <p className="text-[11px] text-slate-400">Distribute hospital logs to friends, family, or partners</p>
+              <p className="text-[11px] text-slate-400">Send useful hospital details to someone</p>
             </div>
           </div>
           <button
@@ -149,10 +135,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 space-y-3">
           <h4 className="text-xs font-semibold uppercase text-slate-450 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
             <Link2 className="w-3.5 h-3.5 text-blue-600" />
-            Share Filters & Spatial Coordinates
+            Share this search
           </h4>
           <p className="text-xs text-slate-500 leading-relaxed">
-            This URL preserves your active search string, specialties configuration, location pin, and radius filters.
+            This link keeps your current search, filters, location, and distance range.
           </p>
 
           <div className="flex gap-2">
@@ -189,7 +175,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         <div className="p-5 space-y-4">
           <h4 className="text-xs font-semibold uppercase text-slate-450 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
             <Mail className="w-3.5 h-3.5 text-blue-600" />
-            Email Curated Hospital List (Resend API)
+            Email selected hospitals
           </h4>
 
           {emailStatus === 'success' ? (
@@ -201,7 +187,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 <div>
                   <h5 className="font-bold">Email Sent Safely!</h5>
                   <p className="text-[11px] mt-0.5 leading-relaxed">
-                    The Resend API delivered the curated selection to <b className="font-mono text-slate-900 dark:text-white">{recipientEmail}</b> successfully. Include this as proof of functional requirements.
+                    The selected hospital details were sent to <b className="font-mono text-slate-900 dark:text-white">{recipientEmail}</b>.
                   </p>
                 </div>
               </div>
@@ -220,7 +206,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     ))}
                   </ul>
                   <p className="text-[9px] text-slate-400 border-t border-slate-100 dark:border-slate-900 pt-2 mt-2">
-                    Delivered via Resend on Carefinder Civic Portal.
+                    Shared from Carefinder.
                   </p>
                 </div>
               </div>
@@ -228,7 +214,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               <button
                 onClick={() => {
                   setEmailStatus('idle');
-                  setApiLogs([]);
                   setRecipientEmail('');
                 }}
                 className="w-full py-2 text-xs font-bold text-blue-600 hover:text-blue-750 hover:underline dark:text-blue-400 mt-2 text-center cursor-pointer"
@@ -238,6 +223,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </div>
           ) : (
             <form onSubmit={handleSendEmail} className="space-y-4">
+              {emailError && (
+                <div className="p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900/50 rounded text-xs leading-relaxed">
+                  {emailError}
+                </div>
+              )}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-705 dark:text-slate-300">
                   Recipient Email Address:
@@ -255,7 +245,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               {/* Selection list of hospitals to include */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-705 dark:text-slate-300">
-                  Select Hospitals to Curate in Email ({selectedHospIds.length} chosen):
+                  Choose hospitals to include ({selectedHospIds.length} selected)
                 </label>
                 <div className="border border-slate-200 dark:border-slate-800 rounded-lg max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/50 p-1">
                   {hospitals.map(h => {
@@ -281,7 +271,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   })}
                   {hospitals.length === 0 && (
                     <div className="p-4 text-center text-xs text-slate-400">
-                      No hospitals matches found. Adjust searching.
+                      No hospitals found. Try changing your search.
                     </div>
                   )}
                 </div>
@@ -301,27 +291,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded transition-all shadow-sm flex items-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  {emailStatus === 'sending' ? 'Sending via Resend...' : 'Send Curated List'}
+                  {emailStatus === 'sending' ? 'Sending...' : 'Send list'}
                 </button>
               </div>
             </form>
-          )}
-
-          {/* Real-time Simulated API Logs */}
-          {apiLogs.length > 0 && (
-            <div className="mt-4 rounded overflow-hidden border border-slate-200 dark:border-slate-800 font-mono text-[9px]">
-              <div className="bg-slate-900 text-slate-400 px-3 py-1.5 flex items-center gap-1.5">
-                <Terminal className="w-3 h-3 text-blue-400" />
-                <span>Resend Transaction API Pipeline Log</span>
-              </div>
-              <div className="bg-slate-950 text-emerald-400 px-3 py-2.5 space-y-1 max-h-32 overflow-y-auto leading-relaxed">
-                {apiLogs.map((log, idx) => (
-                  <div key={idx} className={log.startsWith('SUCCESS') || log.includes('200') ? 'text-emerald-300 font-bold' : log.startsWith('POST') ? 'text-sky-305' : 'text-slate-450'}>
-                    {log}
-                  </div>
-                ))}
-              </div>
-            </div>
           )}
         </div>
       </div>

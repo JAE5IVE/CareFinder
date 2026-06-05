@@ -10,6 +10,8 @@ export interface DirectoryFilters {
   userLng: number | null;
 }
 
+export type HospitalSort = 'distance' | 'rating' | 'name';
+
 export function filterHospitals(hospitals: Hospital[], filters: DirectoryFilters): Hospital[] {
   return hospitals.filter((hospital) => {
     const query = filters.searchQuery.toLowerCase().trim();
@@ -34,8 +36,16 @@ export function filterHospitals(hospitals: Hospital[], filters: DirectoryFilters
   });
 }
 
-export function sortHospitals(hospitals: Hospital[], sortBy: 'rating' | 'name'): Hospital[] {
+export function sortHospitals(
+  hospitals: Hospital[],
+  sortBy: HospitalSort,
+  userLat: number | null = null,
+  userLng: number | null = null
+): Hospital[] {
   return [...hospitals].sort((a, b) => {
+    if (sortBy === 'distance' && userLat !== null && userLng !== null) {
+      return calculateDistance(userLat, userLng, a.latitude, a.longitude) - calculateDistance(userLat, userLng, b.latitude, b.longitude);
+    }
     if (sortBy === 'rating') return b.rating - a.rating;
     return a.name.localeCompare(b.name);
   });

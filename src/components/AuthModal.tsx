@@ -32,20 +32,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Shortcuts to make testing incredibly simple for graders/users
-  const handleShortcut = (role: UserRole) => {
-    setSelectedRole(role);
-    setActiveTab('login');
-    if (role === 'admin') {
-      setEmail('admin@carefinder.gov.ng');
-      setPassword('admin123');
-    } else {
-      setEmail('user@nigeria.ng');
-      setPassword('user123');
-    }
-    setErrorMsg('');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -97,7 +83,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               onClose();
             }, 1000);
           } else {
-            setErrorMsg('Invalid admin credentials. Use the Demo Admin shortcut below for instant login.');
+            setErrorMsg('Invalid email or password.');
           }
         } else {
           // Public login fallback or default seed
@@ -156,7 +142,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="flex items-center gap-2">
             <Key className="w-5 h-5 text-blue-600" />
             <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-              {activeTab === 'login' ? 'Portal Log In' : 'Public Sign Up'}
+              {activeTab === 'login' ? 'Sign In' : 'Create Citizen Account'}
             </h3>
           </div>
           <button
@@ -182,7 +168,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }`}
           >
             <UserIcon className="w-3.5 h-3.5" />
-            Public Citizen
+            Citizen
           </button>
           <button
             type="button"
@@ -197,7 +183,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }`}
           >
             <Shield className="w-3.5 h-3.5" />
-            Registry Admin
+            Admin
           </button>
         </div>
 
@@ -219,7 +205,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {activeTab === 'register' && selectedRole === 'public' && (
             <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+              <label htmlFor="auth-email" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
                 Full Name
               </label>
               <input
@@ -234,10 +220,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           <div className="space-y-1">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+            <label htmlFor="auth-email" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
               Email Address
             </label>
             <input
+              id="auth-email"
               type="email"
               placeholder={selectedRole === 'admin' ? 'admin@carefinder.gov.ng' : 'e.g. citizen@lga.gov.ng'}
               value={email}
@@ -248,10 +235,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-              Security Password
+            <label htmlFor="auth-password" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+              Password
             </label>
             <input
+              id="auth-password"
               type="password"
               placeholder="••••••••"
               value={password}
@@ -267,7 +255,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded font-bold text-xs shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 mt-2 cursor-pointer"
           >
             <LogIn className="w-4 h-4" />
-            {loading ? 'Processing authenticating...' : activeTab === 'login' ? 'Log In Portal' : 'Register Account'}
+            {loading ? 'Please wait...' : activeTab === 'login' ? 'Sign In' : 'Create Account'}
           </button>
 
           {/* Tab toggling selection */}
@@ -286,30 +274,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
-          {/* Quick Demo Shortcuts Info Code */}
-          <div className="pt-3 mt-1.5 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-[10px] text-blue-650 uppercase font-bold tracking-wider block mb-1">
-              DEMO TESTING SHORTCUTS:
-            </span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => handleShortcut('public')}
-                className="flex-1 bg-slate-50 hover:bg-slate-100 dark:bg-slate-955 dark:hover:bg-slate-850 p-2 rounded border border-slate-200 dark:border-slate-800 text-[10px] text-left transition-colors cursor-pointer"
-              >
-                <div className="font-bold text-slate-700 dark:text-slate-300">Public User</div>
-                <div className="text-[9px] text-slate-400 font-mono mt-0.5 truncate">Click-to-Fill</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleShortcut('admin')}
-                className="flex-1 bg-slate-50 hover:bg-slate-100 dark:bg-slate-955 dark:hover:bg-slate-850 p-2 rounded border border-slate-200 dark:border-slate-800 text-[10px] text-left transition-colors cursor-pointer"
-              >
-                <div className="font-bold text-slate-700 dark:text-slate-300">Admin Staff</div>
-                <div className="text-[9px] text-slate-400 font-mono mt-0.5 truncate">Click-to-Fill</div>
-              </button>
-            </div>
-          </div>
         </form>
       </div>
     </div>

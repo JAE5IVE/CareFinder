@@ -202,7 +202,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Target className="w-4 h-4 text-rose-500" />
-              Mapbox Hospital Map
+              Hospital Map
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               {userLat ? `Center: ${userLat.toFixed(4)}N, ${userLng?.toFixed(4)}E` : 'Use location or click a hospital marker'}
@@ -220,7 +220,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         <div ref={mapNodeRef} className="h-[420px] w-full" />
         <div className="p-4 bg-gray-50/20 dark:bg-gray-900/10">
           <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex justify-between">
-            <span>Spatial Search Radius:</span>
+            <span>Distance range:</span>
             <span className="text-indigo-600 dark:text-indigo-400 font-mono text-xs">{radius === 0 ? 'Disabled' : `${radius} km`}</span>
           </label>
           <input
@@ -244,7 +244,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         <div>
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <Target className="w-4 h-4 text-rose-500 animate-pulse" />
-            Interactive Spatial Map
+            Hospital Map
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {userLat ? `Center: ${userLat.toFixed(4)}°N, ${userLng?.toFixed(4)}°E` : 'Click map to place your location'}
@@ -501,7 +501,7 @@ export const MapContainer: React.FC<MapContainerProps> = ({
       <div className="p-4 bg-gray-50/20 dark:bg-gray-900/10 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex justify-between">
-            <span>Spatial Search Radius:</span>
+            <span>Distance range:</span>
             <span className="text-indigo-600 dark:text-indigo-400 font-mono text-xs">{radius === 0 ? 'Disabled' : `${radius} km`}</span>
           </label>
           <input
@@ -524,10 +524,10 @@ export const MapContainer: React.FC<MapContainerProps> = ({
         <div className="text-xs text-gray-500 dark:text-gray-400 flex flex-col justify-center bg-gray-50 dark:bg-gray-800/40 p-2.5 rounded-lg border border-gray-150 dark:border-gray-800/60">
           <p className="font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1">
             <ZoomIn className="w-3.5 h-3.5 text-indigo-500" />
-            Geography Mapping active
+            Distance search is active
           </p>
           <p className="text-[11px] mt-0.5 leading-relaxed">
-            Clicking anywhere on the coordinate plane repositions your simulated position. Only hospitals within the set radius will be highlighted.
+            Click the map to move your search point. Hospitals inside your chosen range will be highlighted.
           </p>
         </div>
       </div>

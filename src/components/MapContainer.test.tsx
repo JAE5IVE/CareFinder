@@ -17,7 +17,7 @@ describe('MapContainer', () => {
         onUpdateRadius={() => undefined}
       />
     );
-    expect(screen.getByText('Interactive Spatial Map')).toBeInTheDocument();
+    expect(screen.getByText('Hospital Map')).toBeInTheDocument();
     expect(screen.getByText('Public Hospitals')).toBeInTheDocument();
   });
 });

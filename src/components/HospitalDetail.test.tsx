@@ -11,12 +11,13 @@ describe('HospitalDetail', () => {
         reviews={SEEDED_REVIEWS}
         currentUser={null}
         onBack={() => undefined}
+        onRequestSignIn={() => undefined}
         onAddReview={() => undefined}
       />
     );
     expect(screen.getByText(SEEDED_HOSPITALS[0].name)).toBeInTheDocument();
-    expect(screen.getByText('Hospital Direct Contact')).toBeInTheDocument();
-    expect(screen.getByText(/Please sign in/)).toBeInTheDocument();
+    expect(screen.getByText('Contact')).toBeInTheDocument();
+    expect(screen.getByText('Sign In to Rate')).toBeInTheDocument();
   });
 
   it('submits logged-in public reviews for moderation', () => {
@@ -27,11 +28,12 @@ describe('HospitalDetail', () => {
         reviews={SEEDED_REVIEWS}
         currentUser={{ id: 'u1', name: 'Amina', email: 'amina@test.ng', role: 'public', createdAt: new Date().toISOString() }}
         onBack={() => undefined}
+        onRequestSignIn={() => undefined}
         onAddReview={onAddReview}
       />
     );
-    fireEvent.change(screen.getByPlaceholderText(/Clean emergency wing/), { target: { value: 'Helpful staff and clean ward.' } });
-    fireEvent.click(screen.getByText('Post Review'));
+    fireEvent.change(screen.getByPlaceholderText(/emergency unit was clean/), { target: { value: 'Helpful staff and clean ward.' } });
+    fireEvent.click(screen.getByText('Submit Review'));
     expect(onAddReview).toHaveBeenCalledWith(expect.objectContaining({ status: 'pending' }));
   });
 });

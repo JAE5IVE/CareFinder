@@ -13,6 +13,7 @@ interface HospitalDetailProps {
   reviews: Review[];
   currentUser: User | null;
   onBack: () => void;
+  onRequestSignIn: () => void;
   onAddReview: (review: Omit<Review, 'id' | 'createdAt'>) => void;
 }
 
@@ -21,6 +22,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
   reviews,
   currentUser,
   onBack,
+  onRequestSignIn,
   onAddReview,
 }) => {
   const [newRating, setNewRating] = useState<number>(5);
@@ -132,7 +134,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
           {/* Main Description */}
           <section className="space-y-2.5">
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-450">
-              Description & Medical Infrastructure
+              About this hospital
             </h3>
             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-slate-50/40 dark:bg-slate-950/20 text-xs leading-relaxed text-slate-700 dark:text-slate-350">
               <MarkdownRenderer content={hospital.description} />
@@ -142,7 +144,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
           {/* Specialties Checklist */}
           <section className="space-y-2.5">
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-450">
-              Certified Specialties
+              Services available
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {hospital.specialties.map(spec => (
@@ -160,7 +162,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
           {hospital.notes && (
             <section className="space-y-2.5">
               <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-450">
-                Patient Warnings & Advisories
+                Notes for patients
               </h3>
               <div className="border border-amber-100 dark:border-amber-900/30 bg-amber-50/20 dark:bg-amber-950/10 p-4 rounded text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
                 <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
@@ -174,13 +176,13 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
           {/* Reviews list index */}
           <section className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center justify-between">
-              <span>Customer Reviews & Case Logs</span>
+              <span>Patient Reviews</span>
               <span className="text-xs font-bold text-slate-400 font-mono">({visibleReviews.length})</span>
             </h3>
 
             {visibleReviews.length === 0 ? (
               <div className="text-center py-8 border border-dashed border-slate-200 dark:border-slate-800 rounded bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-450">
-                No reviews recorded yet for this facility. Have you visited? Be the first to leave review feedback!
+                No reviews yet. If you have visited this hospital, you can be the first to rate it.
               </div>
             ) : (
               <div className="space-y-3">
@@ -229,7 +231,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
           <div className="border border-slate-200 dark:border-slate-800 p-5 bg-slate-50/50 dark:bg-slate-950/30 space-y-4 rounded-xl">
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-450 flex items-center gap-2">
               <Shield className="w-3.5 h-3.5 text-blue-600" />
-              Hospital Direct Contact
+              Contact
             </h4>
 
             <div className="space-y-3.5 text-xs text-slate-700 dark:text-slate-300">
@@ -239,7 +241,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
               >
                 <Phone className="w-4 h-4 text-slate-400 shrink-0 group-hover:text-blue-500" />
                 <div>
-                  <div className="font-bold text-slate-400 text-[9px] uppercase">Phone Line:</div>
+                  <div className="font-bold text-slate-400 text-[9px] uppercase">Phone</div>
                   <div className="font-mono mt-0.5 text-slate-800 dark:text-white">{hospital.phone}</div>
                 </div>
               </a>
@@ -250,7 +252,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
               >
                 <Mail className="w-4 h-4 text-slate-400 shrink-0 group-hover:text-blue-500" />
                 <div>
-                  <div className="font-bold text-slate-400 text-[9px] uppercase">Official Email:</div>
+                  <div className="font-bold text-slate-400 text-[9px] uppercase">Email</div>
                   <div className="font-mono mt-0.5 text-slate-800 dark:text-white">{hospital.email}</div>
                 </div>
               </a>
@@ -260,7 +262,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
                 <div>
                   <div className="font-bold text-slate-450 dark:text-slate-400 text-[10px] uppercase tracking-wide flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-blue-650" />
-                    Visiting Timings
+                    Visiting hours
                   </div>
                   <div className="mt-2 text-xs text-slate-605 dark:text-slate-300">
                     <MarkdownRenderer content={hospital.visitingHours} />
@@ -273,7 +275,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
           {/* Rating distribution breakdown */}
           <div className="border border-slate-205 dark:border-slate-800 rounded-xl p-5 bg-white dark:bg-slate-900 space-y-3.5 shadow-sm">
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-450">
-              Customer Ratings Breakdown
+              Rating summary
             </h4>
             <div className="space-y-2">
               {ratingDistribution.map((count, i) => {
@@ -300,7 +302,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
           {/* Feedback Form Card */}
           <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-5 bg-slate-50 dark:bg-slate-950/20 space-y-4">
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-450">
-              Submit Customer Review
+              Rate this hospital
             </h4>
 
             {reviewSuccess && (
@@ -313,9 +315,15 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
             {!currentUser ? (
               <div className="text-center p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded text-xs space-y-2">
                 <p className="text-slate-500 leading-relaxed">
-                  Reviews help curb spam. Please sign in to submit text reviews or aggregate scores.
+                  Sign in as a citizen to rate this hospital and leave a short review.
                 </p>
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">— REGISTRY RULES —</div>
+                <button
+                  type="button"
+                  onClick={onRequestSignIn}
+                  className="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded text-xs font-bold"
+                >
+                  Sign In to Rate
+                </button>
               </div>
             ) : currentUser.role === 'admin' ? (
               <div className="p-4 bg-blue-50 dark:bg-blue-950/10 text-blue-800 dark:text-blue-400 text-xs rounded border border-blue-100 text-center">
@@ -353,12 +361,12 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
 
                 <div className="space-y-1">
                   <label className="block text-xs font-semibold text-slate-650 dark:text-slate-400">
-                    Clinical Review details:
+                    Your review
                   </label>
                   <textarea
                     required
                     rows={3}
-                    placeholder="e.g. Clean emergency wing, doctors were responsive within 10 minutes..."
+                    placeholder="e.g. The emergency unit was clean and the nurses attended to us quickly..."
                     value={newText}
                     onChange={(e) => setNewText(e.target.value)}
                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded focus:ring-1 focus:ring-blue-500 focus:outline-hidden text-slate-900 dark:text-white"
@@ -370,7 +378,7 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-3 rounded transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  Post Review
+                  Submit Review
                 </button>
               </form>
             )}
@@ -392,3 +400,4 @@ function CheckCircle({ className }: { className?: string }) {
     </svg>
   );
 }
+

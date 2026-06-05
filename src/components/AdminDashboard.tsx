@@ -14,12 +14,14 @@ import { hasSupabaseConfig } from '../lib/env';
 import { inviteAdmin, uploadHospitalPhoto } from '../lib/carefinderRepository';
 import { 
   Building2, Plus, Edit, Trash2, Send, CheckCircle, ShieldAlert, 
-  Terminal, ThumbsUp, Trash, AlertTriangle, MessageSquare, ListCollapse, BookOpen, Key
+  RefreshCw, ThumbsUp, Trash, AlertTriangle, MessageSquare, ListCollapse, BookOpen, Key
 } from 'lucide-react';
 
 interface AdminDashboardProps {
   hospitals: Hospital[];
   reviews: Review[];
+  backendStatus: string;
+  onRestartSeeds: () => void;
   onAddHospital: (h: Omit<Hospital, 'id' | 'createdAt' | 'rating' | 'reviewCount'>) => void;
   onUpdateHospital: (id: string, h: Partial<Hospital>) => void;
   onDeleteHospital: (id: string) => void;
@@ -30,6 +32,8 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   hospitals,
   reviews,
+  backendStatus,
+  onRestartSeeds,
   onAddHospital,
   onUpdateHospital,
   onDeleteHospital,
@@ -62,7 +66,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Admin invitation simulation states
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteStatus, setInviteStatus] = useState<'idle' | 'sending' | 'success'>('idle');
-  const [inviteLogs, setInviteLogs] = useState<string[]>([]);
 
   // Validation errors
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -217,31 +220,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setInviteStatus('sending');
 
     if (hasSupabaseConfig) {
-      setInviteLogs([`EDGE_INVITE: Calling invite-admin for ${inviteEmail}`]);
       try {
         await inviteAdmin(inviteEmail);
-        setInviteLogs(prev => [...prev, 'STATUS_CODE: 201 Created']);
         setInviteStatus('success');
       } catch (error) {
-        setInviteLogs(prev => [...prev, `ERROR: ${error instanceof Error ? error.message : 'Invite failed.'}`]);
         setInviteStatus('idle');
       }
       return;
     }
 
-    setInviteLogs([
-      `EDGE_INVITE: Directing request to Supabase Auth Invite Edge function...`,
-      `API_POST: /v1/auth/invite`,
-      `AUTHORIZATION: Authenticated Admin [Token validated via RLS]`
-    ]);
-
     setTimeout(() => {
-      setInviteLogs(prev => [
-        ...prev,
-        `EMAIL_GATEWAY: Dispensing secure sign-up invitation link to candidate staff [${inviteEmail}]`,
-        `DB_ROW: Writing profile payload to carefinder_admins with status "invited"`,
-        `STATUS_CODE: 201 Created`
-      ]);
       setInviteStatus('success');
     }, 1500);
   };
@@ -860,19 +848,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {activeTab === 'settings' && (
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* Edge Function Invites Card */}
+          <div className="border border-slate-205 dark:border-slate-800 rounded-xl p-5 space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <RefreshCw className="w-4 h-4 text-teal-600" />
+              System Status
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              {backendStatus}
+            </p>
+            <button
+              type="button"
+              onClick={onRestartSeeds}
+              className="w-full px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 rounded cursor-pointer"
+            >
+              Reset starter records
+            </button>
+          </div>
+
+          {/* Staff Invites Card */}
           <div className="border border-slate-205 dark:border-slate-800 rounded-xl p-5 space-y-4">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Key className="w-4 h-4 text-blue-600" />
-              Invite New Staff Administrators (Edge Function)
+              Invite Admin
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              No public sign-ups are allowed for Administrative privileges. You must configure invites here. This calls a mock Supabase Edge Function to safely provision users on the database.
+              Admin access is invite-only. Add the email address of the person you want to help manage Carefinder.
             </p>
 
             <form onSubmit={handleInviteSubmit} className="space-y-3">
               <div className="space-y-1">
-                <label className="block text-[10px] text-slate-450 font-bold uppercase">Candidate Staff Email Address:</label>
+                <label className="block text-[10px] text-slate-450 font-bold uppercase">Email address</label>
                 <input
                   type="email"
                   required
@@ -888,34 +893,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 disabled={!inviteEmail || inviteStatus === 'sending'}
                 className="w-full px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded cursor-pointer"
               >
-                {inviteStatus === 'sending' ? 'Executing Edge Task...' : 'Dispense Invitation Email'}
+                {inviteStatus === 'sending' ? 'Sending invite...' : 'Send invite'}
               </button>
             </form>
 
             {inviteStatus === 'success' && (
               <div className="p-3 bg-emerald-50 text-emerald-800 text-xs rounded border border-emerald-150">
-                Invitation sent to <b>{inviteEmail}</b>. Check the API logs below for details.
+                Invitation sent to <b>{inviteEmail}</b>.
               </div>
             )}
-          </div>
-
-          {/* Edge Execution Logs console */}
-          <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden font-mono text-[9px] flex flex-col max-h-[280px]">
-            <div className="bg-slate-900 text-slate-450 px-3 py-2 flex items-center gap-1.5 border-b border-slate-950">
-              <Terminal className="w-3.5 h-3.5 text-blue-400" />
-              <span>Edge function: carefinder-invite-handler logs</span>
-            </div>
-            <div className="bg-slate-950 text-emerald-400 p-4 space-y-1 overflow-y-auto flex-1 leading-relaxed">
-              {inviteLogs.length === 0 ? (
-                <div className="text-slate-500 italic">No instructions run. Waiting for trigger...</div>
-              ) : (
-                inviteLogs.map((log, idx) => (
-                  <div key={idx} className={log.startsWith('STATUS') ? 'text-emerald-300 font-bold' : log.startsWith('EMAIL') ? 'text-sky-305' : 'text-slate-550'}>
-                    {log}
-                  </div>
-                ))
-              )}
-            </div>
           </div>
 
         </div>

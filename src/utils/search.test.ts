@@ -40,4 +40,9 @@ describe('hospital search filters', () => {
     const rows = sortHospitals(SEEDED_HOSPITALS, 'rating');
     expect(rows[0].rating).toBeGreaterThanOrEqual(rows[1].rating);
   });
+
+  it('sorts by closest hospital when coordinates are available', () => {
+    const rows = sortHospitals(SEEDED_HOSPITALS, 'distance', 6.4291, 3.4246);
+    expect(rows[0].name).toContain('Reddington');
+  });
 });

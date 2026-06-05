@@ -7,7 +7,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Hospital, Review, SearchFilters, User } from './types';
 import { SEEDED_HOSPITALS, SEEDED_REVIEWS } from './data/hospitals';
 import { calculateDistance, DEFAULT_NIGERIA_COORDS } from './utils/distance';
-import { filterHospitals, sortHospitals } from './utils/search';
+import { filterHospitals, HospitalSort, sortHospitals } from './utils/search';
 import { MapContainer } from './components/MapContainer';
 import { CSVExportModal } from './components/CSVExportModal';
 import { ShareModal } from './components/ShareModal';
@@ -44,7 +44,9 @@ import {
   X,
   RefreshCw,
   Sliders,
-  AlertCircle
+  AlertCircle,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 export default function App() {
@@ -85,7 +87,8 @@ export default function App() {
     return null; // Start unauthenticated
   });
 
-  const [backendStatus, setBackendStatus] = useState(hasSupabaseConfig ? 'Connecting to Supabase...' : 'Demo mode: add Supabase keys to use the real backend.');
+  const [backendStatus, setBackendStatus] = useState(hasSupabaseConfig ? 'Connecting to Carefinder records...' : 'Local sample data is active.');
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('carefinder_theme') === 'dark');
 
   // Save states to localStorage on modifications
   useEffect(() => {
@@ -105,6 +108,11 @@ export default function App() {
   }, [currentUser]);
 
   useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('carefinder_theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  useEffect(() => {
     if (!hasSupabaseConfig) return;
     let isMounted = true;
 
@@ -119,10 +127,10 @@ export default function App() {
         setHospitals(remoteHospitals.length ? remoteHospitals : SEEDED_HOSPITALS);
         setReviews(remoteReviews.length ? remoteReviews : SEEDED_REVIEWS);
         setCurrentUser(user);
-        setBackendStatus('Live Supabase backend connected.');
+        setBackendStatus('Connected to live Carefinder records.');
       } catch (error) {
         console.error('Supabase hydration failed:', error);
-        if (isMounted) setBackendStatus('Supabase connection failed. Using local demo data.');
+        if (isMounted) setBackendStatus('Could not load live records. Showing local sample data.');
       }
     }
 
@@ -138,6 +146,7 @@ export default function App() {
 
   const [isCSVModalOpen, setIsCSVModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareHospitalId, setShareHospitalId] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProposeOpen, setIsProposeOpen] = useState(false); // Propose care facility side drawer
 
@@ -151,8 +160,7 @@ export default function App() {
   const [userLat, setUserLat] = useState<number | null>(DEFAULT_NIGERIA_COORDS.latitude);
   const [userLng, setUserLng] = useState<number | null>(DEFAULT_NIGERIA_COORDS.longitude);
 
-  // Sorting columns: 'rating' (high to low) or 'name' (alphabetical)
-  const [sortBy, setSortBy] = useState<'rating' | 'name'>('rating');
+  const [sortBy, setSortBy] = useState<HospitalSort>('distance');
 
   // Load URL-encoded share parameters on mount (Fulfills exact reproduction criteria)
   useEffect(() => {
@@ -231,8 +239,8 @@ export default function App() {
     // We only display 'approved' status hospitals in directory list, 'pending' go to admin review portal
     const approvedOnly = filteredHospitals.filter(h => h.status === 'approved');
     
-    return sortHospitals(approvedOnly, sortBy);
-  }, [filteredHospitals, sortBy]);
+    return sortHospitals(approvedOnly, sortBy, userLat, userLng);
+  }, [filteredHospitals, sortBy, userLat, userLng]);
 
   // Propose Facility input states (Civic Crowdsourcing)
   const [proposeName, setProposeName] = useState('');
@@ -290,7 +298,7 @@ export default function App() {
   };
 
   const handleRestartSeeds = () => {
-    if (window.confirm('Reset local caches back to original verified seeds? This clears any modifications.')) {
+    if (window.confirm('Reset local records back to the starter hospitals? This clears local changes.')) {
       localStorage.removeItem('carefinder_hospitals');
       localStorage.removeItem('carefinder_reviews');
       setHospitals(SEEDED_HOSPITALS);
@@ -382,6 +390,11 @@ export default function App() {
     setActiveView('directory');
   };
 
+  const openShareModal = (hospitalId?: string) => {
+    setShareHospitalId(hospitalId || null);
+    setIsShareModalOpen(true);
+  };
+
   // List of unique LGA suggestions to show as clicks in Lagos
   const lgaSuggestions = ['Surulere', 'Eti-Osa', 'Kosofe', 'Mainland', 'Municipal'];
 
@@ -397,35 +410,40 @@ export default function App() {
             onClick={() => { setSelectedHospitalId(null); setActiveView('directory'); }}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <div className="p-2 bg-blue-600 rounded-lg text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-all">
-              <span className="text-white font-bold text-lg select-none">H</span>
+            <div className="h-10 w-10 rounded-xl bg-teal-700 shadow-md shadow-teal-700/20 group-hover:scale-105 transition-all flex items-center justify-center overflow-hidden">
+              <img src="/favicon.svg" alt="" className="h-10 w-10" />
             </div>
             <div>
               <span className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                Carefinder <b className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 rounded">NIGERIA</b>
+                Carefinder <b className="text-[10px] font-bold px-2 py-0.5 bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 rounded">NIGERIA</b>
               </span>
-              <p className="text-[10px] text-slate-500 font-medium tracking-wide">Civic Health Facilities Directory</p>
+              <p className="text-[10px] text-slate-500 font-medium tracking-wide">Find trusted hospitals near you</p>
             </div>
           </div>
 
           {/* Quick Stats Banner */}
           <div className="hidden lg:flex items-center gap-5 text-xs font-semibold text-slate-500">
             <span className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${hasSupabaseConfig ? 'bg-blue-500' : 'bg-amber-500'}`} />
-              {backendStatus}
-            </span>
-            <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              {hospitals.filter(h => h.ownership === 'public').length} Public Centers
+              {hospitals.filter(h => h.ownership === 'public').length} Public hospitals
             </span>
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-blue-500" />
-              {hospitals.filter(h => h.ownership === 'private').length} Private Facilities
+              {hospitals.filter(h => h.ownership === 'private').length} Private hospitals
             </span>
           </div>
 
           {/* Right Action Widgets */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsDarkMode(prev => !prev)}
+              className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-slate-700 dark:border-slate-800 dark:hover:bg-slate-850 dark:text-slate-300"
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
             {currentUser ? (
               <div className="flex items-center gap-3">
                 <div className="text-right">
@@ -433,7 +451,9 @@ export default function App() {
                     {currentUser.role === 'admin' && <Shield className="w-3.5 h-3.5 text-blue-600" />}
                     {currentUser.name.split(' ')[0]}
                   </div>
-                  <span className="text-[9px] text-blue-600 font-extrabold uppercase tracking-widest">{currentUser.role} staff</span>
+                  <span className="text-[9px] text-blue-600 font-extrabold uppercase tracking-widest">
+                    {currentUser.role === 'admin' ? 'admin' : 'citizen'}
+                  </span>
                 </div>
 
                 {currentUser.role === 'admin' && (
@@ -441,7 +461,7 @@ export default function App() {
                     onClick={() => setActiveView(activeView === 'admin' ? 'directory' : 'admin')}
                     className="px-3.5 py-1.5 text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:hover:bg-blue-950/50 dark:text-blue-400 rounded-lg transition-all border border-blue-100 dark:border-blue-950"
                   >
-                    {activeView === 'admin' ? 'Exit Admin Dashboard' : 'Open Admin Portal'}
+                    {activeView === 'admin' ? 'Back to Search' : 'Admin Dashboard'}
                   </button>
                 )}
 
@@ -459,17 +479,9 @@ export default function App() {
                 className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-slate-900 border border-slate-800 text-white dark:bg-white dark:text-slate-900 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-100 shadow-sm transition-all"
               >
                 <LogIn className="w-4 h-4" />
-                Staff Sign In
+                Sign In
               </button>
             )}
-
-            <button
-              onClick={handleRestartSeeds}
-              className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-450 hover:text-slate-700 dark:border-slate-800 dark:hover:bg-slate-850"
-              title="Factory Seed Reset"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-            </button>
           </div>
 
         </div>
@@ -489,6 +501,8 @@ export default function App() {
           <AdminDashboard
             hospitals={hospitals}
             reviews={reviews}
+            backendStatus={backendStatus}
+            onRestartSeeds={handleRestartSeeds}
             onAddHospital={handleAddHospital}
             onUpdateHospital={handleUpdateHospital}
             onDeleteHospital={handleDeleteHospital}
@@ -511,6 +525,7 @@ export default function App() {
                 reviews={reviews}
                 currentUser={currentUser}
                 onBack={() => setSelectedHospitalId(null)}
+                onRequestSignIn={() => setIsAuthModalOpen(true)}
                 onAddReview={handleAddReview}
               />
             );
@@ -528,7 +543,7 @@ export default function App() {
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-350 uppercase tracking-widest flex items-center gap-1.5">
                   <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
-                  Search & Geo-Constraints
+                  Search hospitals
                 </span>
                 <button
                   type="button"
@@ -547,7 +562,7 @@ export default function App() {
               {/* Main search text field */}
               <div className="space-y-1.5">
                 <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                  Text Query (Name, City or LGA Province)
+                  Hospital name, city or LGA
                 </label>
                 <div className="relative">
                   <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
@@ -563,7 +578,7 @@ export default function App() {
 
               {/* Quick suggestion LGA tabs */}
               <div className="space-y-1">
-                <label className="block text-[9px] font-bold text-slate-400 uppercase">Suggested LGAs / Zones:</label>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase">Quick areas</label>
                 <div className="flex flex-wrap gap-1">
                   {lgaSuggestions.map(tag => (
                     <button
@@ -585,7 +600,7 @@ export default function App() {
               {/* Ownership categories */}
               <div className="space-y-1.5">
                 <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                  Ownership Tier Representation
+                  Ownership
                 </label>
                 <div className="flex gap-2 bg-slate-50 dark:bg-slate-950 p-1 rounded-lg border border-transparent dark:border-slate-850">
                   {(['all', 'public', 'private'] as const).map(option => (
@@ -608,7 +623,7 @@ export default function App() {
               {/* Specialties Multi Checkboxes */}
               <div className="space-y-1.5">
                 <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                  Select Filter Specialties
+                  Medical services
                 </label>
                 <div className="grid grid-cols-2 gap-2 border border-slate-100 dark:border-slate-800 p-3 rounded-lg max-h-40 overflow-y-auto">
                   {['Emergency', 'Maternity', 'Pediatric', 'Dental', 'Cardiology', 'Oncology', 'Orthopedics', 'General Practice'].map(spec => {
@@ -642,25 +657,25 @@ export default function App() {
                   className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:underline dark:text-blue-400"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  Propose Care Facility
+                  Suggest a Hospital
                 </button>
 
                 <div className="flex gap-2">
                   <button
                     onClick={() => setIsCSVModalOpen(true)}
                     className="p-1.5 border border-blue-105 hover:bg-blue-50 rounded text-blue-600 dark:border-blue-900 dark:hover:bg-blue-950/30 dark:text-blue-400 flex items-center gap-1 text-[11px] font-bold"
-                    title="Export CSV to Drive"
+                    title="Download hospital list"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5" />
-                    CSV Export
+                    Download
                   </button>
                   <button
-                    onClick={() => setIsShareModalOpen(true)}
+                    onClick={() => openShareModal()}
                     className="p-1.5 border border-blue-105 hover:bg-blue-50 rounded text-blue-600 dark:border-blue-900 dark:hover:bg-blue-950/30 dark:text-blue-400 flex items-center gap-1 text-[11px] font-bold"
-                    title="Share Filters Link"
+                    title="Share hospital list"
                   >
                     <Share2 className="w-3.5 h-3.5" />
-                    Share List
+                    Share
                   </button>
                 </div>
               </div>
@@ -692,7 +707,7 @@ export default function App() {
                 </span>
                 {radiusFilter > 0 && userLat && (
                   <p className="text-[10px] text-blue-600 font-mono mt-0.5">
-                    Filtering within {radiusFilter} km of center marker
+                    Showing hospitals within {radiusFilter} km
                   </p>
                 )}
               </div>
@@ -705,11 +720,12 @@ export default function App() {
                 </span>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'rating' | 'name')}
+                  onChange={(e) => setSortBy(e.target.value as HospitalSort)}
                   className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-[11px] p-1.5 px-2.5 rounded-lg font-bold text-slate-700 dark:text-slate-300"
                 >
-                  <option value="rating">★ Highest Ratings First</option>
-                  <option value="name">A-Z Alphabetical Alphabet</option>
+                  <option value="distance">Closest to me</option>
+                  <option value="rating">Highest rated</option>
+                  <option value="name">A-Z name</option>
                 </select>
               </div>
             </div>
@@ -718,8 +734,6 @@ export default function App() {
             <div className="space-y-3 max-h-[1050px] overflow-y-auto pr-1">
               {sortedHospitals.map(h => {
                 const distance = userLat && userLng ? calculateDistance(userLat, userLng, h.latitude, h.longitude) : null;
-                const inRadiusRegion = radiusFilter > 0 && distance !== null ? distance <= radiusFilter : true;
-
                 return (
                   <div
                     key={h.id}
@@ -776,7 +790,7 @@ export default function App() {
                       {/* Metric distance coordinates */}
                       {distance !== null && (
                         <div className="text-right">
-                          <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">SPATIAL RANGE</span>
+                          <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Distance</span>
                           <p className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono mt-0.5">
                             {distance} km away
                           </p>
@@ -792,6 +806,29 @@ export default function App() {
                         </div>
                       </div>
 
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedHospitalId(h.id);
+                          }}
+                          className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-teal-600 text-white hover:bg-teal-700"
+                        >
+                          View / Rate
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openShareModal(h.id);
+                          }}
+                          className="px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        >
+                          Share
+                        </button>
+                      </div>
+
                     </div>
 
                   </div>
@@ -803,7 +840,7 @@ export default function App() {
                   <AlertCircle className="w-8 h-8 text-blue-500 mx-auto" />
                   <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No facilities match these filters</p>
                   <p className="text-xs text-slate-450 max-w-sm mx-auto leading-relaxed">
-                    Try checking spelling query, clearing specialties filters, or widening the spatial search radius on the coordinate map!
+                    Try another hospital name, clear some filters, or increase the distance range.
                   </p>
                   <button
                     onClick={() => {
@@ -814,7 +851,7 @@ export default function App() {
                     }}
                     className="mt-2 text-xs font-bold text-blue-600 hover:underline"
                   >
-                    Reset All Query Filters
+                    Clear filters
                   </button>
                 </div>
               )}
@@ -832,7 +869,7 @@ export default function App() {
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <h3 className="text-sm font-bold uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
                   <Building className="w-4 h-4 text-blue-600" />
-                  Propose Local Medical Facility
+                  Suggest a Hospital
                 </h3>
                 <button
                   onClick={() => setIsProposeOpen(false)}
@@ -846,17 +883,17 @@ export default function App() {
                 <div className="p-4 bg-emerald-50 text-emerald-800 border border-emerald-150 rounded-lg space-y-1.5 animate-pulse text-xs">
                   <h4 className="font-bold">Crowdsourced Entry Received!</h4>
                   <p className="text-[11px] leading-relaxed">
-                    Thank you! Your suggestion has been queued with <b>pending</b> status. Registry Admins can evaluate details and coordinate bounds in the submissions tab before publishing care tokens.
+                    Thank you. Your suggestion has been sent for review before it appears publicly.
                   </p>
                 </div>
               ) : (
                 <form id="propose-form" onSubmit={handleProposeSubmit} className="space-y-3.5">
                   <div className="p-3 bg-blue-50/40 dark:bg-blue-950/10 border border-blue-100 text-blue-900 dark:text-blue-300 rounded text-xs leading-relaxed">
-                    Place your search coordinates pin at the target facility spot and input accurate contacts to speed up registry checkouts.
+                    Add the details you know. An admin will check it before publishing.
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] uppercase font-bold text-slate-450">Hospital Legal Name:</label>
+                    <label className="block text-[10px] uppercase font-bold text-slate-450">Hospital name</label>
                     <input
                       type="text"
                       required
@@ -868,7 +905,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] uppercase font-bold text-slate-450">Street Address Location:</label>
+                    <label className="block text-[10px] uppercase font-bold text-slate-450">Street address</label>
                     <input
                       type="text"
                       required
@@ -880,7 +917,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] uppercase font-bold text-slate-450">LGA Parish Name:</label>
+                    <label className="block text-[10px] uppercase font-bold text-slate-450">LGA</label>
                     <input
                       type="text"
                       required
@@ -892,19 +929,19 @@ export default function App() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] uppercase font-bold text-slate-450">Ownership Tier:</label>
+                    <label className="block text-[10px] uppercase font-bold text-slate-450">Ownership</label>
                     <select
                       value={proposeOwnership}
                       onChange={(e) => setProposeOwnership(e.target.value as Hospital['ownership'])}
                       className="w-full bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 px-3 py-2 text-xs rounded text-slate-800 dark:text-slate-200"
                     >
-                      <option value="public">Public Government Subsidy</option>
-                      <option value="private">Private Ownership HMO</option>
+                      <option value="public">Public hospital</option>
+                      <option value="private">Private hospital</option>
                     </select>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] uppercase font-bold text-slate-450">Official Mobile Contactphone:</label>
+                    <label className="block text-[10px] uppercase font-bold text-slate-450">Phone number</label>
                     <input
                       type="text"
                       placeholder="e.g. +234 803 111 2222"
@@ -915,7 +952,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-2">
-                    <span className="block text-[10px] uppercase font-bold text-slate-450">Service Specialty List:</span>
+                    <span className="block text-[10px] uppercase font-bold text-slate-450">Services offered</span>
                     <div className="grid grid-cols-2 gap-1.5 p-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded max-h-24 overflow-y-auto">
                       {['Emergency', 'Maternity', 'Pediatric', 'Dental', 'General Practice'].map(spec => {
                         const active = proposeSpecialties.includes(spec);
@@ -955,7 +992,7 @@ export default function App() {
                   form="propose-form"
                   className="flex-1 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded shadow-sm"
                 >
-                  Propose Entry
+                  Send suggestion
                 </button>
               </div>
             )}
@@ -976,6 +1013,7 @@ export default function App() {
         onClose={() => setIsShareModalOpen(false)}
         filters={{ searchQuery, specialties: selectedSpecialties, ownership: ownershipFilter, radius: radiusFilter, userLat, userLng }}
         hospitals={sortedHospitals}
+        initialHospitalId={shareHospitalId}
       />
 
       <AuthModal
@@ -987,3 +1025,4 @@ export default function App() {
     </div>
   );
 }
+
