@@ -2,6 +2,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { AuthModal } from './AuthModal';
 
+vi.mock('../lib/env', () => ({
+  hasSupabaseConfig: false,
+}));
+
 describe('AuthModal', () => {
   it('logs in with the demo admin shortcut in local mode', async () => {
     const onLoginSuccess = vi.fn();
