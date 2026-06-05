@@ -1,0 +1,6 @@
+{
+  "name": "Carefinder",
+  "description": "A civic health platform for Nigeria to find, export, and share hospital information with role-based admin curation.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

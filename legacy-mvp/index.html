@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carefinder</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Nigeria hospital directory</p>
+        <h1>Carefinder</h1>
+      </div>
+      <nav class="tabs" aria-label="Main views">
+        <button class="tab is-active" type="button" data-view="search">Search</button>
+        <button class="tab" type="button" data-view="admin">Admin</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="searchView" class="view">
+        <aside class="filters" aria-label="Hospital search filters">
+          <div class="field">
+            <label for="query">Search</label>
+            <input id="query" type="search" placeholder="Hospital, city, or LGA" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="city">City</label>
+            <select id="city"></select>
+          </div>
+
+          <div class="field">
+            <label for="specialty">Specialty</label>
+            <select id="specialty"></select>
+          </div>
+
+          <div class="field">
+            <label for="ownership">Ownership</label>
+            <select id="ownership">
+              <option value="">Any ownership</option>
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="radius">Radius</label>
+            <div class="range-row">
+              <input id="radius" type="range" min="2" max="30" value="10" />
+              <span id="radiusValue">10 km</span>
+            </div>
+          </div>
+
+          <div class="button-grid">
+            <button id="useLocation" class="button primary" type="button">Use my location</button>
+            <button id="clearFilters" class="button" type="button">Clear</button>
+          </div>
+
+          <div class="export-box">
+            <h2>Export CSV</h2>
+            <div id="columnChoices" class="checks"></div>
+            <button id="exportCsv" class="button primary full" type="button">Download CSV</button>
+          </div>
+
+          <div class="share-box">
+            <h2>Share</h2>
+            <button id="copyLink" class="button full" type="button">Copy search link</button>
+            <div class="field compact">
+              <label for="shareEmail">Email recipient</label>
+              <input id="shareEmail" type="email" placeholder="name@example.com" />
+            </div>
+            <button id="shareEmailButton" class="button full" type="button">Prepare email</button>
+            <p id="shareFeedback" class="feedback" role="status"></p>
+          </div>
+        </aside>
+
+        <section class="workspace">
+          <div class="map-panel">
+            <div class="map-header">
+              <div>
+                <p class="eyebrow">Interactive map preview</p>
+                <h2 id="resultsTitle">Hospitals</h2>
+              </div>
+              <select id="sortBy" aria-label="Sort hospitals">
+                <option value="rating">Sort by rating</option>
+                <option value="name">Sort by name</option>
+                <option value="city">Sort by city</option>
+              </select>
+            </div>
+            <div id="mapCanvas" class="map-canvas" aria-label="Hospital map"></div>
+          </div>
+
+          <div id="results" class="results" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section id="adminView" class="view admin-view" hidden>
+        <aside class="admin-panel">
+          <div class="admin-card">
+            <p class="eyebrow">Protected dashboard prototype</p>
+            <h2>Admin access</h2>
+            <div id="loginPanel">
+              <div class="field">
+                <label for="adminEmail">Email</label>
+                <input id="adminEmail" type="email" value="admin@carefinder.ng" />
+              </div>
+              <div class="field">
+                <label for="adminPassword">Password</label>
+                <input id="adminPassword" type="password" value="demo-admin" />
+              </div>
+              <button id="adminLogin" class="button primary full" type="button">Sign in</button>
+            </div>
+            <div id="adminSession" hidden>
+              <p class="success">Signed in as demo admin.</p>
+              <button id="adminLogout" class="button full" type="button">Sign out</button>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <h2>Pending reviews</h2>
+            <div id="reviewModeration"></div>
+          </div>
+        </aside>
+
+        <section class="admin-editor">
+          <div class="map-header">
+            <div>
+              <p class="eyebrow">Markdown hospital entry</p>
+              <h2>Create or update hospital</h2>
+            </div>
+            <span id="adminSaveStatus" class="feedback"></span>
+          </div>
+          <form id="hospitalForm" class="hospital-form">
+            <div class="two-col">
+              <div class="field">
+                <label for="name">Name</label>
+                <input id="name" name="name" required />
+              </div>
+              <div class="field">
+                <label for="formCity">City</label>
+                <input id="formCity" name="city" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="address">Address</label>
+              <input id="address" name="address" required />
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" required />
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" />
+              </div>
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="formSpecialties">Specialties</label>
+                <input id="formSpecialties" name="specialties" placeholder="Emergency, Maternity" required />
+              </div>
+              <div class="field">
+                <label for="formOwnership">Ownership</label>
+                <select id="formOwnership" name="ownership">
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="lat">Latitude</label>
+                <input id="lat" name="lat" type="number" step="0.0001" required />
+              </div>
+              <div class="field">
+                <label for="lng">Longitude</label>
+                <input id="lng" name="lng" type="number" step="0.0001" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="description">Markdown description</label>
+              <textarea id="description" name="description" rows="8" required></textarea>
+            </div>
+            <div class="preview-shell">
+              <h3>Preview</h3>
+              <div id="markdownPreview" class="markdown-preview"></div>
+            </div>
+            <button class="button primary" type="submit">Save hospital</button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="detailDialog">
+      <button id="closeDialog" class="icon-button" type="button" aria-label="Close">x</button>
+      <div id="detailContent"></div>
+    </dialog>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
