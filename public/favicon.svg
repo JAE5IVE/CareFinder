@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Carefinder">
+  <rect width="64" height="64" rx="14" fill="#0f766e"/>
+  <path d="M32 8c-9.4 0-17 7.3-17 16.4 0 12.3 17 31.6 17 31.6s17-19.3 17-31.6C49 15.3 41.4 8 32 8Z" fill="#ffffff"/>
+  <circle cx="32" cy="24" r="9.5" fill="#dcfce7"/>
+  <path d="M29 17.5h6v4h4v6h-4v4h-6v-4h-4v-6h4v-4Z" fill="#0f766e"/>
+</svg>
