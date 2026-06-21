@@ -126,7 +126,7 @@ export async function listReviews(): Promise<Review[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from('reviews')
-    .select('*, profiles(email)')
+    .select('*')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data || []).map(mapReview);

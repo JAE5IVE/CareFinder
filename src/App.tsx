@@ -118,16 +118,22 @@ export default function App() {
 
     async function hydrateFromSupabase() {
       try {
-        const [remoteHospitals, remoteReviews, user] = await Promise.all([
-          listHospitals(),
+        const remoteHospitals = await listHospitals();
+        if (!isMounted) return;
+        setHospitals(remoteHospitals.length ? remoteHospitals : SEEDED_HOSPITALS);
+        setBackendStatus('Connected to live Carefinder records.');
+
+        const [reviewsResult, userResult] = await Promise.allSettled([
           listReviews(),
           getCurrentUser(),
         ]);
         if (!isMounted) return;
-        setHospitals(remoteHospitals.length ? remoteHospitals : SEEDED_HOSPITALS);
-        setReviews(remoteReviews.length ? remoteReviews : SEEDED_REVIEWS);
-        setCurrentUser(user);
-        setBackendStatus('Connected to live Carefinder records.');
+        if (reviewsResult.status === 'fulfilled' && reviewsResult.value.length) {
+          setReviews(reviewsResult.value);
+        }
+        if (userResult.status === 'fulfilled') {
+          setCurrentUser(userResult.value);
+        }
       } catch (error) {
         console.error('Supabase hydration failed:', error);
         if (isMounted) setBackendStatus('Could not load live records. Showing local sample data.');
