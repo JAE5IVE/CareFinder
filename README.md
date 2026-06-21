@@ -52,17 +52,6 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-Create a `.env.local` file when connecting a local build to the hosted services:
-
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_MAPBOX_ACCESS_TOKEN=your_mapbox_public_token
-VITE_FORCE_DEMO_MODE=false
-```
-
-Never commit real secret keys or service-role credentials.
-
 ## Quality Checks
 
 ```bash
@@ -82,4 +71,4 @@ Special thanks to **AltSchool Africa** for the learning, support, and community 
 
 ## Author
 
-**Mr Tuta Godwin**
+**Tuta Joseph Vershima**
