@@ -36,7 +36,31 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   const [isLocating, setIsLocating] = useState(false);
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markerRefs = useRef<mapboxgl.Marker[]>([]);
+  const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const selectHospitalRef = useRef(onSelectHospital);
+
+  useEffect(() => {
+    selectHospitalRef.current = onSelectHospital;
+  }, [onSelectHospital]);
+
+  const hospitalGeoJson = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: hospitals
+      .filter((hospital) => hospital.status === 'approved')
+      .map((hospital) => ({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [hospital.longitude, hospital.latitude],
+        },
+        properties: {
+          id: hospital.id,
+          name: hospital.name,
+          address: hospital.address,
+          ownership: hospital.ownership,
+        },
+      })),
+  }), [hospitals]);
 
   // Determine geographic bounding box for projection
   const bounds = useMemo(() => {
@@ -156,45 +180,127 @@ export const MapContainer: React.FC<MapContainerProps> = ({
   useEffect(() => {
     if (!hasMapboxConfig || !mapNodeRef.current || mapRef.current) return;
     mapboxgl.accessToken = env.mapboxAccessToken;
-    mapRef.current = new mapboxgl.Map({
+    const map = new mapboxgl.Map({
       container: mapNodeRef.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [userLng ?? 3.4184, userLat ?? 6.4474],
       zoom: 10,
     });
-    mapRef.current.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
-  }, [userLat, userLng]);
+    mapRef.current = map;
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+
+    map.on('load', () => {
+      map.addSource('carefinder-hospitals', {
+        type: 'geojson',
+        data: hospitalGeoJson as any,
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 52,
+      });
+      map.addLayer({
+        id: 'hospital-clusters',
+        type: 'circle',
+        source: 'carefinder-hospitals',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#0f766e',
+          'circle-radius': ['step', ['get', 'point_count'], 18, 25, 23, 100, 29],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+        },
+      });
+      map.addLayer({
+        id: 'hospital-cluster-count',
+        type: 'symbol',
+        source: 'carefinder-hospitals',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': ['get', 'point_count_abbreviated'],
+          'text-size': 12,
+        },
+        paint: {
+          'text-color': '#ffffff',
+        },
+      });
+      map.addLayer({
+        id: 'hospital-points',
+        type: 'circle',
+        source: 'carefinder-hospitals',
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': [
+            'match',
+            ['get', 'ownership'],
+            'public',
+            '#10b981',
+            'private',
+            '#2563eb',
+            '#64748b',
+          ],
+          'circle-radius': 7,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+        },
+      });
+
+      map.on('click', 'hospital-clusters', (event) => {
+        const feature = map.queryRenderedFeatures(event.point, { layers: ['hospital-clusters'] })[0];
+        const clusterId = feature?.properties?.cluster_id;
+        if (clusterId === undefined || feature.geometry.type !== 'Point') return;
+        const source = map.getSource('carefinder-hospitals') as mapboxgl.GeoJSONSource;
+        const center = feature.geometry.coordinates as [number, number];
+        source.getClusterExpansionZoom(clusterId, (error, zoom) => {
+          if (!error) map.easeTo({ center, zoom });
+        });
+      });
+
+      map.on('click', 'hospital-points', (event) => {
+        const feature = event.features?.[0];
+        if (!feature || feature.geometry.type !== 'Point') return;
+        const id = String(feature.properties?.id || '');
+        if (id) selectHospitalRef.current(id);
+        new mapboxgl.Popup({ offset: 12 })
+          .setLngLat(feature.geometry.coordinates as [number, number])
+          .setText(`${feature.properties?.name || 'Hospital'} - ${feature.properties?.address || ''}`)
+          .addTo(map);
+      });
+
+      for (const layerId of ['hospital-clusters', 'hospital-points']) {
+        map.on('mouseenter', layerId, () => {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+        map.on('mouseleave', layerId, () => {
+          map.getCanvas().style.cursor = '';
+        });
+      }
+    });
+
+    return () => {
+      userMarkerRef.current?.remove();
+      userMarkerRef.current = null;
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (!hasMapboxConfig || !mapRef.current) return;
-    markerRefs.current.forEach((marker) => marker.remove());
-    markerRefs.current = [];
+    const source = mapRef.current.getSource('carefinder-hospitals') as mapboxgl.GeoJSONSource | undefined;
+    source?.setData(hospitalGeoJson as any);
+  }, [hospitalGeoJson]);
 
-    hospitals
-      .filter((hospital) => hospital.status === 'approved')
-      .forEach((hospital) => {
-        const markerColor = hospital.ownership === 'public' ? '#10b981' : hospital.ownership === 'private' ? '#2563eb' : '#64748b';
-        const marker = new mapboxgl.Marker({ color: markerColor })
-          .setLngLat([hospital.longitude, hospital.latitude])
-          .setPopup(
-            new mapboxgl.Popup({ offset: 18 }).setHTML(
-              `<strong>${hospital.name}</strong><br/>${hospital.address}<br/>${hospital.rating.toFixed(1)} stars`
-            )
-          )
-          .addTo(mapRef.current!);
-        marker.getElement().addEventListener('click', () => onSelectHospital(hospital.id));
-        markerRefs.current.push(marker);
-      });
-
+  useEffect(() => {
+    if (!hasMapboxConfig || !mapRef.current) return;
+    userMarkerRef.current?.remove();
+    userMarkerRef.current = null;
     if (userLat !== null && userLng !== null) {
-      const userMarker = new mapboxgl.Marker({ color: '#f43f5e' })
+      userMarkerRef.current = new mapboxgl.Marker({ color: '#f43f5e' })
         .setLngLat([userLng, userLat])
         .setPopup(new mapboxgl.Popup({ offset: 18 }).setText('Your search center'))
         .addTo(mapRef.current);
-      markerRefs.current.push(userMarker);
       mapRef.current.easeTo({ center: [userLng, userLat], duration: 600 });
     }
-  }, [hospitals, userLat, userLng, onSelectHospital]);
+  }, [userLat, userLng]);
 
   if (hasMapboxConfig) {
     return (

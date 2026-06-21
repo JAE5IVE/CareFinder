@@ -1,7 +1,12 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SEEDED_HOSPITALS } from '../data/hospitals';
 import { MapContainer } from './MapContainer';
+
+vi.mock('../lib/env', () => ({
+  env: { mapboxAccessToken: '' },
+  hasMapboxConfig: false,
+}));
 
 describe('MapContainer', () => {
   it('renders the fallback interactive map without Mapbox keys', () => {
