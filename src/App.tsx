@@ -153,7 +153,8 @@ export default function App() {
   // ----- SEARCH & FILTERS ENGINE -----
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
-  const [ownershipFilter, setOwnershipFilter] = useState<'all' | 'public' | 'private'>('all');
+  const [ownershipFilter, setOwnershipFilter] = useState<'all' | Hospital['ownership']>('all');
+  const [visibleResultCount, setVisibleResultCount] = useState(50);
   const [radiusFilter, setRadiusFilter] = useState<number>(0); // 0 = disabled
 
   // User position tracking (default Lagos)
@@ -174,7 +175,7 @@ export default function App() {
 
     if (queryParam) setSearchQuery(queryParam);
     if (specParam) setSelectedSpecialties(specParam.split(','));
-    if (ownerParam === 'public' || ownerParam === 'private') setOwnershipFilter(ownerParam);
+    if (ownerParam === 'public' || ownerParam === 'private' || ownerParam === 'unknown') setOwnershipFilter(ownerParam);
     if (radiusParam) {
       const parsedR = parseInt(radiusParam, 10);
       if (!isNaN(parsedR)) setRadiusFilter(parsedR);
@@ -241,6 +242,12 @@ export default function App() {
     
     return sortHospitals(approvedOnly, sortBy, userLat, userLng);
   }, [filteredHospitals, sortBy, userLat, userLng]);
+
+  useEffect(() => {
+    setVisibleResultCount(50);
+  }, [searchQuery, selectedSpecialties, ownershipFilter, radiusFilter, sortBy]);
+
+  const visibleHospitals = sortedHospitals.slice(0, visibleResultCount);
 
   // Propose Facility input states (Civic Crowdsourcing)
   const [proposeName, setProposeName] = useState('');
@@ -431,6 +438,12 @@ export default function App() {
               <span className="w-2 h-2 rounded-full bg-blue-500" />
               {hospitals.filter(h => h.ownership === 'private').length} Private hospitals
             </span>
+            {hospitals.some(h => h.ownership === 'unknown') && (
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-slate-400" />
+                {hospitals.filter(h => h.ownership === 'unknown').length} Ownership not listed
+              </span>
+            )}
           </div>
 
           {/* Right Action Widgets */}
@@ -603,7 +616,7 @@ export default function App() {
                   Ownership
                 </label>
                 <div className="flex gap-2 bg-slate-50 dark:bg-slate-950 p-1 rounded-lg border border-transparent dark:border-slate-850">
-                  {(['all', 'public', 'private'] as const).map(option => (
+                  {(['all', 'public', 'private', 'unknown'] as const).map(option => (
                     <button
                       key={option}
                       type="button"
@@ -684,7 +697,7 @@ export default function App() {
 
             {/* Georeference Spatial Radius Visualizer Mapping panel */}
             <MapContainer
-              hospitals={validatedHospitals}
+              hospitals={sortedHospitals.slice(0, 250)}
               selectedHospitalId={selectedHospitalId}
               onSelectHospital={setSelectedHospitalId}
               userLat={userLat}
@@ -732,7 +745,7 @@ export default function App() {
 
             {/* Results cards dynamic grid listing */}
             <div className="space-y-3 max-h-[1050px] overflow-y-auto pr-1">
-              {sortedHospitals.map(h => {
+              {visibleHospitals.map(h => {
                 const distance = userLat && userLng ? calculateDistance(userLat, userLng, h.latitude, h.longitude) : null;
                 return (
                   <div
@@ -747,7 +760,9 @@ export default function App() {
                         <span className={`px-2 py-0.5 text-[9px] uppercase tracking-widest font-extrabold rounded-md ${
                           h.ownership === 'public'
                             ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/25 dark:text-emerald-400'
-                            : 'bg-blue-50 text-blue-700 dark:bg-blue-950/25 dark:text-blue-400'
+                            : h.ownership === 'private'
+                              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/25 dark:text-blue-400'
+                              : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
                         }`}>
                           {h.ownership}
                         </span>
@@ -834,6 +849,16 @@ export default function App() {
                   </div>
                 );
               })}
+
+              {visibleHospitals.length < sortedHospitals.length && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleResultCount(count => count + 50)}
+                  className="w-full py-3 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/30 dark:text-blue-300 rounded-lg"
+                >
+                  Show 50 more hospitals
+                </button>
+              )}
 
               {sortedHospitals.length === 0 && (
                 <div className="text-center py-16 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 space-y-4 shadow-sm">

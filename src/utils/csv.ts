@@ -16,7 +16,7 @@ export const DEFAULT_CSV_COLUMNS: CsvColumn[] = [
   { key: 'phone', label: 'Phone Number', enabled: true },
   { key: 'email', label: 'Email Address', enabled: true },
   { key: 'specialties', label: 'Medical Specialties', enabled: true },
-  { key: 'ownership', label: 'Ownership (Public/Private)', enabled: true },
+  { key: 'ownership', label: 'Ownership', enabled: true },
   { key: 'rating', label: 'Average Customer Rating', enabled: true },
 ];
 

@@ -28,6 +28,12 @@ function mapHospital(row: any): Hospital {
     reviewCount: Number(row.review_count ?? 0),
     status: row.status || 'approved',
     photoUrls: row.photo_urls || [],
+    sourceName: row.source_name || '',
+    sourceId: row.source_id || '',
+    sourceUpdatedAt: row.source_updated_at || '',
+    facilityCategory: row.facility_category || '',
+    careLevel: row.care_level || '',
+    functionalStatus: row.functional_status || '',
     createdAt: row.created_at,
   };
 }
@@ -99,12 +105,21 @@ export async function signOut() {
 
 export async function listHospitals(): Promise<Hospital[]> {
   if (!supabase) return [];
-  const { data, error } = await supabase
-    .from('hospitals_with_ratings')
-    .select('*')
-    .order('name');
-  if (error) throw error;
-  return (data || []).map(mapHospital);
+  const pageSize = 1000;
+  const rows: any[] = [];
+
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await supabase
+      .from('hospitals_with_ratings')
+      .select('*')
+      .order('name')
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+  }
+
+  return rows.map(mapHospital);
 }
 
 export async function listReviews(): Promise<Review[]> {

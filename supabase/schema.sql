@@ -1,7 +1,7 @@
 create extension if not exists postgis;
 
 create type public.user_role as enum ('public', 'admin');
-create type public.ownership_type as enum ('public', 'private');
+create type public.ownership_type as enum ('public', 'private', 'unknown');
 create type public.review_status as enum ('pending', 'approved', 'hidden');
 
 create table public.profiles (
@@ -49,11 +49,20 @@ create table public.hospitals (
   notes_markdown text,
   location geography(point, 4326) not null,
   photo_urls text[] not null default '{}',
+  source_name text,
+  source_id text,
+  source_updated_at timestamptz,
+  facility_category text,
+  care_level text,
+  functional_status text,
   status text not null default 'approved' check (status in ('approved', 'pending')),
   created_by uuid references public.profiles(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.hospitals
+add constraint hospitals_source_record_unique unique (source_name, source_id);
 
 create table public.reviews (
   id uuid primary key default gen_random_uuid(),
@@ -75,11 +84,35 @@ create index reviews_hospital_idx on public.reviews (hospital_id);
 
 create or replace view public.hospitals_with_ratings as
 select
-  h.*,
+  h.id,
+  h.name,
+  h.address,
+  h.city,
+  h.lga,
+  h.state,
+  h.phone,
+  h.email,
+  h.ownership,
+  h.specialties,
+  h.visiting_hours_markdown,
+  h.description_markdown,
+  h.notes_markdown,
+  h.location,
+  h.photo_urls,
+  h.status,
+  h.created_by,
+  h.created_at,
+  h.updated_at,
   st_y(h.location::geometry) as latitude,
   st_x(h.location::geometry) as longitude,
   coalesce(round(avg(r.rating)::numeric, 1), 0) as rating,
-  count(r.id) filter (where r.status = 'approved') as review_count
+  count(r.id) filter (where r.status = 'approved') as review_count,
+  h.source_name,
+  h.source_id,
+  h.source_updated_at,
+  h.facility_category,
+  h.care_level,
+  h.functional_status
 from public.hospitals h
 left join public.reviews r
   on r.hospital_id = h.id

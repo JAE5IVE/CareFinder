@@ -173,7 +173,8 @@ export const MapContainer: React.FC<MapContainerProps> = ({
     hospitals
       .filter((hospital) => hospital.status === 'approved')
       .forEach((hospital) => {
-        const marker = new mapboxgl.Marker({ color: hospital.ownership === 'public' ? '#10b981' : '#2563eb' })
+        const markerColor = hospital.ownership === 'public' ? '#10b981' : hospital.ownership === 'private' ? '#2563eb' : '#64748b';
+        const marker = new mapboxgl.Marker({ color: markerColor })
           .setLngLat([hospital.longitude, hospital.latitude])
           .setPopup(
             new mapboxgl.Popup({ offset: 18 }).setHTML(
@@ -386,7 +387,9 @@ export const MapContainer: React.FC<MapContainerProps> = ({
                       ? '#4f46e5'
                       : h.ownership === 'public'
                       ? '#10b981' // Green for public
-                      : '#3b82f6' // Blue for private
+                      : h.ownership === 'private'
+                        ? '#3b82f6' // Blue for private
+                        : '#64748b' // Gray when ownership is not listed
                   }
                   stroke="#ffffff"
                   strokeWidth="1.5"
@@ -448,6 +451,10 @@ export const MapContainer: React.FC<MapContainerProps> = ({
           <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-500 border border-white block" />
             <span>Private Hospitals</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-500 border border-white block" />
+            <span>Ownership not listed</span>
           </div>
           <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500 border border-white block" />

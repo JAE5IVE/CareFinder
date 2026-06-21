@@ -19,6 +19,7 @@ This folder contains the stronger React + TypeScript version from the ZIP, with 
 - Supabase/PostGIS/RLS schema starter in `supabase/schema.sql`.
 - Mapbox GL JS when `VITE_MAPBOX_ACCESS_TOKEN` is configured, SVG map fallback otherwise.
 - React-MD-Editor in admin Markdown fields.
+- Nationwide registry coverage with 2,611 hospital-like facilities across all 37 states/FCT.
 
 ## Demo Credentials
 
@@ -99,6 +100,24 @@ supabase secrets set APP_URL=http://localhost:3000
 supabase functions deploy share-hospitals
 supabase functions deploy invite-admin
 ```
+
+## Nationwide Hospital Import
+
+Carefinder imports hospital-like records from the [HDX Nigeria Health Facilities dataset](https://data.humdata.org/dataset/nigeria-health-facilities). The import includes general, cottage, specialist, teaching, federal medical, district, research hospitals, and medical centres. Source records do not reliably include ownership, phone numbers, street addresses, specialties, or current visiting hours, so Carefinder marks those fields as not listed instead of inventing values.
+
+Apply `supabase/migrations/20260621193000_add_nationwide_registry_fields.sql`, download the source CSV and shapefile archive, then run a dry-run:
+
+```bash
+npm run import:hospitals
+```
+
+For an authorized live import, temporarily set `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` and run:
+
+```bash
+npm run import:hospitals -- --commit
+```
+
+The importer uses stable source UUIDs and upserts by primary key, so reruns update records without duplicating them. Remove the service-role key from `.env.local` immediately after importing.
 
 ## What Still Needs Real Credentials
 

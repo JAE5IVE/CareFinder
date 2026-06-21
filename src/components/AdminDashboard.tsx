@@ -358,6 +358,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   >
                     <option value="public">Public (Government Subsidized)</option>
                     <option value="private">Private (HMO & Corporate)</option>
+                    <option value="unknown">Ownership not listed</option>
                   </select>
                 </div>
 
@@ -624,7 +625,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <tr key={h.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20">
                         <td className="p-3.5 font-bold text-slate-900 dark:text-white">
                           <div className="flex items-center gap-2">
-                            <span className={`w-2 h-2 rounded-full ${h.ownership === 'public' ? 'bg-emerald-500' : 'bg-blue-500'}`} />
+                            <span className={`w-2 h-2 rounded-full ${h.ownership === 'public' ? 'bg-emerald-500' : h.ownership === 'private' ? 'bg-blue-500' : 'bg-slate-400'}`} />
                             {h.name}
                           </div>
                         </td>

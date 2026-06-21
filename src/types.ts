@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type OwnershipType = 'public' | 'private';
+export type OwnershipType = 'public' | 'private' | 'unknown';
 
 export interface Hospital {
   id: string;
@@ -25,6 +25,12 @@ export interface Hospital {
   reviewCount: number;  // Cached review count
   status: 'approved' | 'pending'; // In Carefinder, admins curate entries other than public submissions
   photoUrls?: string[];
+  sourceName?: string;
+  sourceId?: string;
+  sourceUpdatedAt?: string;
+  facilityCategory?: string;
+  careLevel?: string;
+  functionalStatus?: string;
   createdAt: string;
 }
 

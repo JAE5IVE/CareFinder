@@ -89,9 +89,11 @@ export const HospitalDetail: React.FC<HospitalDetailProps> = ({
             <span className={`px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md ${
               hospital.ownership === 'public'
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900'
-                : 'bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900'
+                : hospital.ownership === 'private'
+                  ? 'bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900'
+                  : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
             }`}>
-              {hospital.ownership} Healthcare
+              {hospital.ownership === 'unknown' ? 'Ownership not listed' : `${hospital.ownership} healthcare`}
             </span>
 
             {hospital.rating >= 4.5 && (
