@@ -453,10 +453,6 @@ export const MapContainer: React.FC<MapContainerProps> = ({
             <span>Private Hospitals</span>
           </div>
           <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-500 border border-white block" />
-            <span>Ownership not listed</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500 border border-white block" />
             <span>Your Position (Click map to move)</span>
           </div>

@@ -16,6 +16,13 @@ const HOSPITAL_CATEGORIES = new Set([
 ]);
 
 const SOURCE_NAME = 'HDX Nigeria Health Facilities';
+const PUBLIC_CATEGORIES = new Set([
+  'General Hospital',
+  'Cottage Hospital',
+  'Federal Medical Center',
+  'District Hospital',
+  'Teaching Hospital',
+]);
 const DEFAULT_CSV = path.join(os.tmpdir(), 'carefinder-nigeria-health-facilities.csv');
 const DEFAULT_SHP = path.join(
   os.tmpdir(),
@@ -61,6 +68,16 @@ function normalizeText(value, fallback = '') {
   return text || fallback;
 }
 
+function classifyOwnership(row) {
+  const text = `${row.name || ''} ${row.alternate_name || ''}`.toLowerCase();
+  const publicSignal = /\b(federal|government|state hospital|general hospital|district hospital|teaching hospital|university hospital|national hospital|military)\b/;
+  const privateSignal = /\b(private|specialist|medical cent(?:er|re)|memorial|catholic|baptist|mission|foundation)\b/;
+
+  if (publicSignal.test(text)) return 'public';
+  if (privateSignal.test(text)) return 'private';
+  return PUBLIC_CATEGORIES.has(row.category) ? 'public' : 'private';
+}
+
 function buildRecords(csvPath, shpPath) {
   const parsed = Papa.parse(fs.readFileSync(csvPath, 'utf8'), {
     header: true,
@@ -92,6 +109,7 @@ function buildRecords(csvPath, shpPath) {
     const category = normalizeText(row.category, 'Hospital');
     const careLevel = normalizeText(row.type, 'Unknown');
     const functionalStatus = normalizeText(row.functional_status, 'Unknown');
+    const ownership = classifyOwnership(row);
 
     records.push({
       id: row.global_id,
@@ -102,11 +120,11 @@ function buildRecords(csvPath, shpPath) {
       state,
       phone: 'Not listed',
       email: null,
-      ownership: 'unknown',
+      ownership,
       specialties: [category],
       visiting_hours_markdown: 'Visiting hours are not listed in the registry source.',
       description_markdown: `${category} listed as a ${careLevel.toLowerCase()}-level facility.`,
-      notes_markdown: `Registry status: ${functionalStatus}. Imported from the HDX Nigeria Health Facilities dataset. Contact details, services, and current operating status should be independently verified.`,
+      notes_markdown: `Registry status: ${functionalStatus}. Imported from the HDX Nigeria Health Facilities dataset. Ownership was grouped using facility name and category signals because the source does not provide a dedicated ownership field. Contact details, services, ownership, and current operating status should be independently verified.`,
       location: `SRID=4326;POINT(${coordinate.longitude} ${coordinate.latitude})`,
       photo_urls: [],
       status: 'approved',
@@ -149,6 +167,10 @@ const shpPath = env.NIGERIA_FACILITIES_SHP || DEFAULT_SHP;
 const allRecords = buildRecords(csvPath, shpPath);
 const records = requestedLimit && requestedLimit > 0 ? allRecords.slice(0, requestedLimit) : allRecords;
 const states = new Set(records.map((record) => record.state));
+const ownershipCounts = records.reduce(
+  (counts, record) => ({ ...counts, [record.ownership]: counts[record.ownership] + 1 }),
+  { public: 0, private: 0 },
+);
 
 console.log(JSON.stringify({
   mode: args.has('--commit') ? 'commit' : 'dry-run',
@@ -156,7 +178,7 @@ console.log(JSON.stringify({
   records: records.length,
   availableRecords: allRecords.length,
   states: states.size,
-  ownership: 'unknown',
+  ownership: ownershipCounts,
   csvPath,
   shpPath,
 }, null, 2));

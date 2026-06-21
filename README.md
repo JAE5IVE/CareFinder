@@ -2,40 +2,20 @@
 
 Carefinder is a civic health directory that helps Nigerians find, export, and share hospital information. It supports public hospital search plus admin tools for curating hospital entries, submissions, and reviews.
 
-This folder contains the stronger React + TypeScript version from the ZIP, with senior-engineer cleanup applied after comparing it against the project brief.
-
 ## Current Features
 
 - Search hospitals by name, city, LGA, or state.
 - Filter by specialty, ownership, and radius.
-- Interactive SVG map prototype with location/radius controls.
+- Interactive map with location and radius controls.
 - Sortable hospital list and hospital detail view.
 - CSV export with selectable columns.
 - Shareable URL generation from active filters.
-- Real Supabase client wiring with local demo fallback.
-- Resend email sharing through `supabase/functions/share-hospitals`.
-- Public user login through Supabase Auth when configured, demo auth otherwise.
+- Email sharing.
+- Citizen and admin authentication.
 - Admin dashboard for hospital management, review moderation, public submissions, invite-only admins, and image uploads.
-- Supabase/PostGIS/RLS schema starter in `supabase/schema.sql`.
 - Mapbox GL JS when `VITE_MAPBOX_ACCESS_TOKEN` is configured, SVG map fallback otherwise.
 - React-MD-Editor in admin Markdown fields.
 - Nationwide registry coverage with 2,611 hospital-like facilities across all 37 states/FCT.
-
-## Demo Credentials
-
-Admin:
-
-```text
-Email: admin@carefinder.gov.ng
-Password: admin123
-```
-
-Public user:
-
-```text
-Email: user@nigeria.ng
-Password: user123
-```
 
 ## Run Locally
 
@@ -54,84 +34,15 @@ http://localhost:3000
 
 ## Test Commands
 
-The brief asks for Vitest, React Testing Library, Playwright, and Supabase RLS checks. Those test files are now present.
-
 ```bash
 npm run lint
 npm test
+npm run build
 npm run test:e2e
-```
-
-Implemented test starter:
-
-- Unit tests: CSV export, distance calculation, search filters.
-- Component tests: CSV export modal, auth modal, map container, hospital detail/review widget, admin dashboard.
-- E2E tests: search, export CSV, share link, admin login/portal, anonymous review gate.
-- RLS/schema contract tests: PostGIS, RLS enablement, admin write policies, public reads, storage policies.
-- Optional live RLS integration test: set `TEST_PUBLIC_EMAIL` and `TEST_PUBLIC_PASSWORD` to verify that non-admin writes are blocked against a real Supabase project.
-
-## Supabase Setup
-
-1. Create a Supabase project.
-2. Run `supabase/schema.sql` in the SQL editor or through the Supabase CLI.
-3. Optionally run `supabase/seed.sql` for starter hospital data.
-4. Create a public storage bucket named `hospital-images` if the SQL was not run through the CLI.
-5. Add these values to `.env.local`:
-
-```text
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-VITE_MAPBOX_ACCESS_TOKEN=
-```
-
-6. Add Edge Function secrets:
-
-```bash
-supabase secrets set RESEND_API_KEY=...
-supabase secrets set RESEND_FROM_EMAIL="Carefinder <carefinder@your-domain.com>"
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=...
-supabase secrets set SUPABASE_ANON_KEY=...
-supabase secrets set APP_URL=http://localhost:3000
-```
-
-7. Deploy functions:
-
-```bash
-supabase functions deploy share-hospitals
-supabase functions deploy invite-admin
 ```
 
 ## Nationwide Hospital Import
 
-Carefinder imports hospital-like records from the [HDX Nigeria Health Facilities dataset](https://data.humdata.org/dataset/nigeria-health-facilities). The import includes general, cottage, specialist, teaching, federal medical, district, research hospitals, and medical centres. Source records do not reliably include ownership, phone numbers, street addresses, specialties, or current visiting hours, so Carefinder marks those fields as not listed instead of inventing values.
+Carefinder currently includes 2,611 hospital-like registry records across Nigeria's 36 states and the FCT, sourced from the [HDX Nigeria Health Facilities dataset](https://data.humdata.org/dataset/nigeria-health-facilities).
 
-Apply `supabase/migrations/20260621193000_add_nationwide_registry_fields.sql`, download the source CSV and shapefile archive, then run a dry-run:
-
-```bash
-npm run import:hospitals
-```
-
-For an authorized live import, temporarily set `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` and run:
-
-```bash
-npm run import:hospitals -- --commit
-```
-
-The importer uses stable source UUIDs and upserts by primary key, so reruns update records without duplicating them. Remove the service-role key from `.env.local` immediately after importing.
-
-## What Still Needs Real Credentials
-
-- Supabase URL and anon key.
-- Mapbox public access token.
-- Resend API key and verified sender.
-- Supabase service role key for the invite-admin Edge Function.
-- Actual `npm install`/build/test execution after Node/npm are available.
-
-## Next Build Phase
-
-1. Install Node dependencies and run lint, unit/component tests, build, and E2E tests.
-2. Create the real Supabase project and apply `supabase/schema.sql`.
-3. Add Supabase, Mapbox, and Resend credentials.
-4. Deploy the Supabase Edge Functions.
-5. Run the optional live RLS integration test against Supabase test users.
-6. Fix any issues surfaced by the real toolchain and deploy to Vercel.
+The source does not provide a dedicated ownership field. Carefinder groups records into public or private using transparent facility-name and category signals. Registry contact details, ownership, services, and current operating status should be independently verified before relying on them for care decisions.

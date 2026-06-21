@@ -153,7 +153,7 @@ export default function App() {
   // ----- SEARCH & FILTERS ENGINE -----
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
-  const [ownershipFilter, setOwnershipFilter] = useState<'all' | Hospital['ownership']>('all');
+  const [ownershipFilter, setOwnershipFilter] = useState<'all' | 'public' | 'private'>('all');
   const [visibleResultCount, setVisibleResultCount] = useState(50);
   const [radiusFilter, setRadiusFilter] = useState<number>(0); // 0 = disabled
 
@@ -175,7 +175,7 @@ export default function App() {
 
     if (queryParam) setSearchQuery(queryParam);
     if (specParam) setSelectedSpecialties(specParam.split(','));
-    if (ownerParam === 'public' || ownerParam === 'private' || ownerParam === 'unknown') setOwnershipFilter(ownerParam);
+    if (ownerParam === 'public' || ownerParam === 'private') setOwnershipFilter(ownerParam);
     if (radiusParam) {
       const parsedR = parseInt(radiusParam, 10);
       if (!isNaN(parsedR)) setRadiusFilter(parsedR);
@@ -438,12 +438,6 @@ export default function App() {
               <span className="w-2 h-2 rounded-full bg-blue-500" />
               {hospitals.filter(h => h.ownership === 'private').length} Private hospitals
             </span>
-            {hospitals.some(h => h.ownership === 'unknown') && (
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-slate-400" />
-                {hospitals.filter(h => h.ownership === 'unknown').length} Ownership not listed
-              </span>
-            )}
           </div>
 
           {/* Right Action Widgets */}
@@ -616,7 +610,7 @@ export default function App() {
                   Ownership
                 </label>
                 <div className="flex gap-2 bg-slate-50 dark:bg-slate-950 p-1 rounded-lg border border-transparent dark:border-slate-850">
-                  {(['all', 'public', 'private', 'unknown'] as const).map(option => (
+                  {(['all', 'public', 'private'] as const).map(option => (
                     <button
                       key={option}
                       type="button"
