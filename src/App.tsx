@@ -418,21 +418,21 @@ export default function App() {
       
       {/* GLOBAL NAVBAR BANNER */}
       <nav className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-250 dark:border-slate-800 shadow-sm" id="navbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between flex-wrap gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Logo Brand */}
           <div 
             onClick={() => { setSelectedHospitalId(null); setActiveView('directory'); }}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex min-w-0 items-center gap-2 sm:gap-3 cursor-pointer group"
           >
-            <div className="h-10 w-10 rounded-xl bg-teal-700 shadow-md shadow-teal-700/20 group-hover:scale-105 transition-all flex items-center justify-center overflow-hidden">
-              <img src="/favicon.svg" alt="" className="h-10 w-10" />
+            <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-lg bg-teal-700 shadow-md shadow-teal-700/20 group-hover:scale-105 transition-all flex items-center justify-center overflow-hidden">
+              <img src="/favicon.svg" alt="" className="h-full w-full" />
             </div>
-            <div>
-              <span className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                Carefinder <b className="text-[10px] font-bold px-2 py-0.5 bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 rounded">NIGERIA</b>
+            <div className="min-w-0">
+              <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 whitespace-nowrap">
+                Carefinder <b className="hidden sm:inline text-[10px] font-bold px-2 py-0.5 bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 rounded">NIGERIA</b>
               </span>
-              <p className="text-[10px] text-slate-500 font-medium tracking-wide">Find trusted hospitals near you</p>
+              <p className="hidden sm:block text-[10px] text-slate-500 font-medium tracking-wide">Find trusted hospitals near you</p>
             </div>
           </div>
 
@@ -449,7 +449,7 @@ export default function App() {
           </div>
 
           {/* Right Action Widgets */}
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <button
               onClick={() => setIsDarkMode(prev => !prev)}
               className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-slate-700 dark:border-slate-800 dark:hover:bg-slate-850 dark:text-slate-300"
@@ -461,7 +461,7 @@ export default function App() {
 
             {currentUser ? (
               <div className="flex items-center gap-3">
-                <div className="text-right">
+                <div className="hidden sm:block text-right">
                   <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1 justify-end">
                     {currentUser.role === 'admin' && <Shield className="w-3.5 h-3.5 text-blue-600" />}
                     {currentUser.name.split(' ')[0]}
@@ -474,9 +474,10 @@ export default function App() {
                 {currentUser.role === 'admin' && (
                   <button
                     onClick={() => setActiveView(activeView === 'admin' ? 'directory' : 'admin')}
-                    className="px-3.5 py-1.5 text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:hover:bg-blue-950/50 dark:text-blue-400 rounded-lg transition-all border border-blue-100 dark:border-blue-950"
+                    className="px-2 sm:px-3.5 py-1.5 text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:hover:bg-blue-950/50 dark:text-blue-400 rounded-lg transition-all border border-blue-100 dark:border-blue-950"
                   >
-                    {activeView === 'admin' ? 'Back to Search' : 'Admin Dashboard'}
+                    <span className="sm:hidden">{activeView === 'admin' ? 'Search' : 'Dashboard'}</span>
+                    <span className="hidden sm:inline">{activeView === 'admin' ? 'Back to Search' : 'Admin Dashboard'}</span>
                   </button>
                 )}
 
@@ -491,7 +492,7 @@ export default function App() {
             ) : (
               <button
                 onClick={() => setIsAuthModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-slate-900 border border-slate-800 text-white dark:bg-white dark:text-slate-900 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-100 shadow-sm transition-all"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 text-xs font-bold bg-slate-900 border border-slate-800 text-white dark:bg-white dark:text-slate-900 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-100 shadow-sm transition-all whitespace-nowrap"
               >
                 <LogIn className="w-4 h-4" />
                 Sign In
@@ -504,13 +505,13 @@ export default function App() {
 
       {/* ADMIN CONSOLE VIEW PORTAL */}
       {activeView === 'admin' && currentUser?.role === 'admin' ? (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6">
           <div className="mb-4">
             <button
               onClick={() => setActiveView('directory')}
               className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1"
             >
-              ← Back to Carefinder Map & List Directory
+              Back to Carefinder Map & List Directory
             </button>
           </div>
           <AdminDashboard
@@ -548,12 +549,12 @@ export default function App() {
         </div>
       ) : (
         /* STANDARD DOCK COMBINATION: GEO-MAP + SEARCH FILTERS + SORTABLE LIST VIEW */
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+        <main className="w-full min-w-0 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-4 sm:mt-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 flex-1">
           
           {/* LEFT 5 COLUMNS: RIGOROUS MULTI-SEARCH FILTERS ENGINE */}
           <section className="lg:col-span-5 space-y-6">
                         {/* Filter controls box container */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-xl shadow-sm space-y-5">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-lg shadow-sm space-y-5">
               
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-350 uppercase tracking-widest flex items-center gap-1.5">
@@ -715,7 +716,7 @@ export default function App() {
           <section className="lg:col-span-7 space-y-4">
             
             {/* Sort toolbar */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center justify-between flex-wrap gap-3 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
               <div>
                 <span className="text-xs font-bold text-slate-900 dark:text-white">
                   Matching Hospitals ({sortedHospitals.length})
@@ -728,7 +729,7 @@ export default function App() {
               </div>
 
               {/* Sort selector */}
-              <div className="flex items-center gap-2">
+              <div className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-2">
                 <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1">
                   <Sliders className="w-3 h-3 text-slate-450" />
                   Sort:
@@ -746,14 +747,14 @@ export default function App() {
             </div>
 
             {/* Results cards dynamic grid listing */}
-            <div className="space-y-3 max-h-[1050px] overflow-y-auto pr-1">
+            <div className="space-y-3 lg:max-h-[1050px] lg:overflow-y-auto lg:pr-1">
               {visibleHospitals.map(h => {
                 const distance = userLat && userLng ? calculateDistance(userLat, userLng, h.latitude, h.longitude) : null;
                 return (
                   <div
                     key={h.id}
                     onClick={() => setSelectedHospitalId(h.id)}
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800 p-5 rounded-xl cursor-pointer shadow-sm transition-all hover:scale-[1.005] duration-200 group flex flex-col md:flex-row gap-4"
+                    className="min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800 p-4 sm:p-5 rounded-lg cursor-pointer shadow-sm transition-all hover:scale-[1.005] duration-200 group flex flex-col md:flex-row gap-4"
                   >
                     
                     {/* Specialty tags card column */}
@@ -780,7 +781,7 @@ export default function App() {
                         <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
                           {h.name}
                         </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-start gap-1.5 break-words">
                           <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           {h.address}, {h.city} ({h.lga} LGA)
                         </p>
@@ -802,7 +803,7 @@ export default function App() {
                     </div>
 
                     {/* Numeric and metric visual badges column */}
-                    <div className="flex md:flex-col justify-between items-end shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-dashed border-slate-100 md:border-l dark:border-slate-850 md:pl-4 space-y-1">
+                    <div className="flex flex-col sm:flex-row md:flex-col gap-3 justify-between items-stretch sm:items-end shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-dashed border-slate-100 md:border-l dark:border-slate-850 md:pl-4">
                       
                       {/* Metric distance coordinates */}
                       {distance !== null && (
@@ -823,14 +824,14 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex gap-2 pt-1 sm:justify-end">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedHospitalId(h.id);
                           }}
-                          className="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-teal-600 text-white hover:bg-teal-700"
+                          className="flex-1 sm:flex-none px-3 py-1.5 text-[11px] font-bold rounded-lg bg-teal-600 text-white hover:bg-teal-700 whitespace-nowrap"
                         >
                           View / Rate
                         </button>
@@ -840,7 +841,7 @@ export default function App() {
                             e.stopPropagation();
                             openShareModal(h.id);
                           }}
-                          className="px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                          className="flex-1 sm:flex-none px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 whitespace-nowrap"
                         >
                           Share
                         </button>

@@ -1,38 +1,69 @@
 # Carefinder
 
-Carefinder is a civic health directory that helps Nigerians find, export, and share hospital information. It supports public hospital search plus admin tools for curating hospital entries, submissions, and reviews.
+Carefinder is a nationwide hospital directory that helps people in Nigeria find, compare, export, and share healthcare facility information. It also gives authorized administrators a registry console for maintaining hospital records, reviewing submissions, moderating reviews, uploading images, and inviting other administrators.
 
-## Current Features
+## Live Application
 
-- Search hospitals by name, city, LGA, or state.
-- Filter by specialty, ownership, and radius.
-- Interactive map with location and radius controls.
-- Sortable hospital list and hospital detail view.
-- CSV export with selectable columns.
-- Shareable URL generation from active filters.
-- Email sharing.
-- Citizen and admin authentication.
-- Admin dashboard for hospital management, review moderation, public submissions, invite-only admins, and image uploads.
-- Mapbox GL JS when `VITE_MAPBOX_ACCESS_TOKEN` is configured, SVG map fallback otherwise.
-- React-MD-Editor in admin Markdown fields.
-- Nationwide registry coverage with 2,611 hospital-like facilities across all 37 states/FCT.
+[Open Carefinder](https://care-finder-eta.vercel.app/)
+
+## Main Features
+
+- Search by hospital name, city, LGA, or state.
+- Filter by ownership, medical service, and distance.
+- Browse hospitals on a clustered Mapbox map.
+- View public and private hospitals separately.
+- Open hospital details, ratings, services, and contact information.
+- Download filtered hospital results as CSV.
+- Share selected hospitals by link or email.
+- Submit hospitals for administrator review.
+- Register and sign in as a public user.
+- Manage hospitals, submissions, reviews, images, and administrator invitations from the Registry Console.
+- Use the application on desktop, tablet, or mobile in light or dark mode.
+
+## Registry Coverage
+
+Carefinder currently contains **2,614 hospital records** across Nigeria's 36 states and the Federal Capital Territory:
+
+- 996 public hospitals
+- 1,618 private hospitals
+
+The nationwide registry was prepared from the [HDX Nigeria Health Facilities dataset](https://data.humdata.org/dataset/nigeria-health-facilities), with additional curated hospital records. Ownership for imported records is classified from available facility names and categories because the source dataset does not include a dedicated ownership field.
+
+Hospital contact details, ownership, services, and operating status should be independently confirmed before making healthcare decisions.
+
+## Technology
+
+- React and TypeScript
+- Vite
+- Tailwind CSS
+- Supabase Database, Authentication, Storage, and Edge Functions
+- Mapbox GL JS
+- Vercel
+- Vitest and Playwright
 
 ## Run Locally
 
-Prerequisite: Node.js.
+Install Node.js, clone the repository, and run:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Then open:
+Open `http://localhost:3000`.
 
-```text
-http://localhost:3000
+Create a `.env.local` file when connecting a local build to the hosted services:
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_MAPBOX_ACCESS_TOKEN=your_mapbox_public_token
+VITE_FORCE_DEMO_MODE=false
 ```
 
-## Test Commands
+Never commit real secret keys or service-role credentials.
+
+## Quality Checks
 
 ```bash
 npm run lint
@@ -41,8 +72,14 @@ npm run build
 npm run test:e2e
 ```
 
-## Nationwide Hospital Import
+## Data Import
 
-Carefinder currently includes 2,611 hospital-like registry records across Nigeria's 36 states and the FCT, sourced from the [HDX Nigeria Health Facilities dataset](https://data.humdata.org/dataset/nigeria-health-facilities).
+The nationwide registry importer is available at `scripts/import-nigeria-hospitals.mjs`. It is intended for controlled administrator use and requires the appropriate Supabase service credentials in the local environment.
 
-The source does not provide a dedicated ownership field. Carefinder groups records into public or private using transparent facility-name and category signals. Registry contact details, ownership, services, and current operating status should be independently verified before relying on them for care decisions.
+## Acknowledgment
+
+Special thanks to **AltSchool Africa** for the learning, support, and community that helped make this project possible.
+
+## Author
+
+**Mr Tuta Godwin**
