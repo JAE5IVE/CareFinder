@@ -148,7 +148,9 @@ export default function App() {
 
   // ----- MODALS & SELECTIONS -----
   const [selectedHospitalId, setSelectedHospitalId] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<'directory' | 'admin'>('directory');
+  const [activeView, setActiveView] = useState<'directory' | 'admin'>(() =>
+    window.location.pathname === '/admin' ? 'admin' : 'directory'
+  );
 
   const [isCSVModalOpen, setIsCSVModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);

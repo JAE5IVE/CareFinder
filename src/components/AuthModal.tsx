@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.5
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { User, UserRole } from '../types';
 import { X, Shield, User as UserIcon, LogIn, Key, HelpCircle, CheckCircle } from 'lucide-react';
 import { hasSupabaseConfig } from '../lib/env';
@@ -29,6 +29,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const timersRef = useRef<number[]>([]);
+
+  useEffect(() => () => {
+    timersRef.current.forEach(window.clearTimeout);
+  }, []);
+
+  const schedule = (callback: () => void, delay: number) => {
+    const timer = window.setTimeout(() => {
+      timersRef.current = timersRef.current.filter(id => id !== timer);
+      callback();
+    }, delay);
+    timersRef.current.push(timer);
+  };
 
   if (!isOpen) return null;
 
@@ -53,7 +66,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           onLoginSuccess(user);
           setSuccessMsg('Successfully logged in.');
         }
-        setTimeout(() => {
+        schedule(() => {
           setSuccessMsg('');
           onClose();
         }, 1000);
@@ -65,7 +78,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    setTimeout(() => {
+    schedule(() => {
       // Direct hardcoded simulation
       if (activeTab === 'login') {
         if (selectedRole === 'admin') {
@@ -78,7 +91,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               createdAt: '2026-01-01T00:00:00Z',
             });
             setSuccessMsg('Logged in as Carefinder Admin!');
-            setTimeout(() => {
+            schedule(() => {
               setSuccessMsg('');
               onClose();
             }, 1000);
@@ -106,7 +119,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             });
           }
           setSuccessMsg('Successfully logged in.');
-          setTimeout(() => {
+          schedule(() => {
             setSuccessMsg('');
             onClose();
           }, 1000);
@@ -124,7 +137,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             createdAt: new Date().toISOString(),
           });
           setSuccessMsg('Account registered successfully!');
-          setTimeout(() => {
+          schedule(() => {
             setSuccessMsg('');
             onClose();
           }, 1000);
